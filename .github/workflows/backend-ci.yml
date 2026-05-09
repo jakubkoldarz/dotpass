@@ -30,7 +30,7 @@ jobs:
     - name: Build and Run Docker
       run: |
         cd backend
-        docker build -t my-backend-app .
+        docker build -t dotpass-backend .
         docker stop backend-container || true
         docker rm backend-container || true
-        docker run -d --name backend-container -p 8080:8080 my-backend-app
+        docker run -d --name backend-container -p 8080:8080 dotpass-backend
