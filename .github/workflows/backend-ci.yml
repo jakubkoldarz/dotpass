@@ -27,10 +27,13 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Build and Run Docker
+    - name: Create .env file
       run: |
-        cd backend
-        docker build -t dotpass-backend .
-        docker stop backend-container || true
-        docker rm backend-container || true
-        docker run -d --name backend-container -p 8080:8080 dotpass-backend
+        echo "DB_USER=${{ secrets.DB_USER }}" >> .env
+        echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
+        echo "DB_NAME=${{ secrets.DB_NAME }}" >> .env
+        echo "MQTT_BROKER_PASSWORD=${{ secrets.MQTT_BROKER_PASSWORD }}" >> .env
+
+    - name: Deploy with Docker Compose
+      run: |
+        docker-compose up -d --build
