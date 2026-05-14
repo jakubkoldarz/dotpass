@@ -480,3 +480,34 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+# React Native / mobile
+# (wyciągnięte z dotpass/mobile/.gitignore)
+mobile/node_modules/
+mobile/.yarn/*
+mobile/.pnp.*
+mobile/.expo/
+mobile/.expo-shared/
+mobile/.vscode/
+mobile/.idea/
+
+# Android
+mobile/android/.gradle/
+mobile/android/local.properties
+mobile/android/app/build/
+mobile/android/*.keystore
+mobile/android/.cxx/
+mobile/android/.gradle/
+
+# iOS / Xcode
+mobile/ios/Pods/
+mobile/ios/Podfile.lock
+mobile/ios/DerivedData/
+mobile/ios/*.xcworkspace
+mobile/ios/*.xcodeproj/project.xcworkspace/
+mobile/ios/.xcode.env.local
+
+# Metro / dev
+mobile/.metro-health-check*
+mobile/coverage/
+# ...additional mobile-specific temp
