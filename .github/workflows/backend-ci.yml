@@ -38,6 +38,7 @@ jobs:
         echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
         echo "DB_NAME=${{ secrets.DB_NAME }}" >> .env
         echo "MQTT_BROKER_PASSWORD=${{ secrets.MQTT_BROKER_PASSWORD }}" >> .env
+        echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
 
     - name: Deploy with Docker Compose
       run: |
