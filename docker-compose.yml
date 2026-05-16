@@ -13,7 +13,6 @@ services:
       - "5432:5432"
     volumes:
       - dotpass_data:/var/lib/postgresql/data
-
   emqx-broker:
     image: emqx/emqx:latest
     container_name: emqx-container
