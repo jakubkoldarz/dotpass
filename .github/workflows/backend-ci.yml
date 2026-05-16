@@ -30,11 +30,11 @@ jobs:
         sparse-checkout: |
           backend/
           docker-compose.yml
-        sparse-checkout-cone-mode: true
+        sparse-checkout-cone-mode: false
 
     - name: Create .env file
       run: |
-        echo "DB_USER=${{ secrets.DB_USER }}" >> .env
+        echo "DB_USER=${{ secrets.DB_USER }}" > .env
         echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
         echo "DB_NAME=${{ secrets.DB_NAME }}" >> .env
         echo "MQTT_BROKER_PASSWORD=${{ secrets.MQTT_BROKER_PASSWORD }}" >> .env
