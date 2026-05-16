@@ -3,6 +3,7 @@ version: '3.8'
 services:
   db-postgres:
     image: postgres:latest
+    user: "1003:1003"
     container_name: dotpass-db
     restart: always
     environment:
