@@ -26,6 +26,11 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+      with:
+        sparse-checkout: |
+          backend/
+          docker-compose.yml
+        sparse-checkout-cone-mode: true
 
     - name: Create .env file
       run: |
