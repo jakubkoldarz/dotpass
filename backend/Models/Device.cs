@@ -17,12 +17,13 @@ namespace backend.Models
 
         public bool? IsPublicInWorkspace { get; set; }
 
-
         [Required]
         public Guid WorkspaceId { get; set; }
 
         [ForeignKey(nameof(WorkspaceId))]
-        public Workspace? Workspace { get; set; } 
+        public Workspace? Workspace { get; set; }
 
+        public ICollection<DeviceGroupAccess> GroupAccesses { get; set; } = [];
+        public ICollection<DeviceUserAccess> UserAccesses { get; set; } = [];
     }
 }

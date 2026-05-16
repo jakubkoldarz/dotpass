@@ -17,5 +17,8 @@ namespace backend.Models
 
         [ForeignKey(nameof(WorkspaceId))]
         public Workspace? Workspace { get; set; }
+
+        public ICollection<GroupMember> GroupMembers { get; set; } = [];
+        public ICollection<DeviceGroupAccess> GroupAccesses { get; set; } = [];
     }
 }
