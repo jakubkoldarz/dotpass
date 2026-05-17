@@ -511,3 +511,21 @@ mobile/ios/.xcode.env.local
 mobile/.metro-health-check*
 mobile/coverage/
 # ...additional mobile-specific temp
+mobile/android/app/src/main/res/drawable-mdpi/node_modules_reactnavigation_elements_lib_module_assets_backicon.png
+mobile/android/app/src/main/res/drawable-mdpi/node_modules_reactnavigation_elements_lib_module_assets_backiconmask.png
+mobile/android/app/src/main/res/drawable-mdpi/node_modules_reactnavigation_elements_lib_module_assets_clearicon.png
+mobile/android/app/src/main/res/drawable-mdpi/node_modules_reactnavigation_elements_lib_module_assets_closeicon.png
+mobile/android/app/src/main/res/drawable-mdpi/node_modules_reactnavigation_elements_lib_module_assets_searchicon.png
+mobile/android/app/src/main/res/drawable-xhdpi/node_modules_reactnavigation_elements_lib_module_assets_backicon.png
+mobile/android/app/src/main/res/drawable-xhdpi/node_modules_reactnavigation_elements_lib_module_assets_clearicon.png
+mobile/android/app/src/main/res/drawable-xhdpi/node_modules_reactnavigation_elements_lib_module_assets_closeicon.png
+mobile/android/app/src/main/res/drawable-xhdpi/node_modules_reactnavigation_elements_lib_module_assets_searchicon.png
+mobile/android/app/src/main/res/drawable-xxhdpi/node_modules_reactnavigation_elements_lib_module_assets_backicon.png
+mobile/android/app/src/main/res/drawable-xxhdpi/node_modules_reactnavigation_elements_lib_module_assets_clearicon.png
+mobile/android/app/src/main/res/drawable-xxhdpi/node_modules_reactnavigation_elements_lib_module_assets_closeicon.png
+mobile/android/app/src/main/res/drawable-xxhdpi/node_modules_reactnavigation_elements_lib_module_assets_searchicon.png
+mobile/android/app/src/main/res/drawable-xxxhdpi/node_modules_reactnavigation_elements_lib_module_assets_backicon.png
+mobile/android/app/src/main/res/drawable-xxxhdpi/node_modules_reactnavigation_elements_lib_module_assets_clearicon.png
+mobile/android/app/src/main/res/drawable-xxxhdpi/node_modules_reactnavigation_elements_lib_module_assets_closeicon.png
+mobile/android/app/src/main/res/drawable-xxxhdpi/node_modules_reactnavigation_elements_lib_module_assets_searchicon.png
+mobile/android/app/src/main/assets/index.android.bundle
