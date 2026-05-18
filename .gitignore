@@ -529,3 +529,7 @@ mobile/android/app/src/main/res/drawable-xxxhdpi/node_modules_reactnavigation_el
 mobile/android/app/src/main/res/drawable-xxxhdpi/node_modules_reactnavigation_elements_lib_module_assets_closeicon.png
 mobile/android/app/src/main/res/drawable-xxxhdpi/node_modules_reactnavigation_elements_lib_module_assets_searchicon.png
 mobile/android/app/src/main/assets/index.android.bundle
+
+# PSQL
+postgres_data/
+*.lscache
