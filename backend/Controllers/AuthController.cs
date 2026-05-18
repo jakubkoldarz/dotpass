@@ -20,7 +20,7 @@ namespace backend.Controllers
         {
             var user = await _authService.LoginAsync(request);
             var token = _tokenService.CreateAccessToken(user);
-            return Ok(token);
+            return Ok(new JwtResponse(token));
         }
     }
 }

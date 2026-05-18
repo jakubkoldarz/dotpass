@@ -26,14 +26,14 @@ namespace backend.Services
 
             if(user == null)
             {
-                throw new BadRequestException("Invalid email address");
+                throw new BadRequestException("Invalid email address or password");
             }
 
             var isPassValid = BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash);
 
             if(!isPassValid)
             {
-                throw new BadRequestException("Invalid credentials");
+                throw new BadRequestException("Invalid email address or password");
             }
 
             return user;
