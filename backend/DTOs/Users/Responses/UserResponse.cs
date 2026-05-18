@@ -1,6 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace backend.DTOs.Users.Requests
+﻿namespace backend.DTOs.Users.Requests
 {
     public record UserResponse(
         Guid Id,

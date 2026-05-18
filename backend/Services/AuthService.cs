@@ -1,18 +1,58 @@
 ﻿using backend.DTOs.Users.Requests;
 using backend.Interfaces;
+using backend.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace backend.Services
 {
-    public class AuthService : IAuthService
+    public class AuthService(ApplicationDbContext _db) : IAuthService
     {
-        public Task<UserResponse> LoginAsync(LoginUserRequest request)
+        public async Task<IEnumerable<UserResponse>> GetAllAsync()
         {
-            throw new NotImplementedException();
+            var users = await _db.Users.ToListAsync();
+
+            return users.Select(u => new UserResponse(
+                u.Id,
+                u.Email,
+                u.Firstname,
+                u.Lastname
+            )).ToList();
         }
 
-        public Task<UserResponse> RegisterAsync(RegisterUserRequest request)
+        public async Task<UserResponse> LoginAsync(LoginUserRequest request)
         {
-            throw new NotImplementedException();
+            var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
+
+            if(user == null)
+            {
+                throw new BadHttpRequestException("Invalid email address.");
+            }
+
+            var password = BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash);
+
+            return new UserResponse(user.Id, user.Firstname, user.Lastname, user.Email);
+        }
+
+        public async Task<UserResponse> RegisterAsync(RegisterUserRequest request)
+        {
+            var userExists = await _db.Users.AnyAsync(u => u.Email == request.Email);
+
+            if (userExists) throw new BadHttpRequestException("Email already in use.");
+
+            var passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
+
+            var user = new User
+            {
+                Firstname = request.Firstname,
+                Lastname = request.Lastname,
+                Email = request.Email,
+                PasswordHash = passwordHash
+            };
+
+            var newUser = _db.Users.Add(user);
+            await _db.SaveChangesAsync();
+
+            return new UserResponse(user.Id, user.Firstname, user.Lastname, user.Email);
         }
     }
 }

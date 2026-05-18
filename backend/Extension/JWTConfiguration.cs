@@ -8,7 +8,7 @@ namespace backend.Extension
     {
         public static IServiceCollection AddJWTConfiguration(this IServiceCollection services, IConfiguration config)
         {
-            var jwtKey = config["JWT_KEY"] ?? config["Jwt:Key"];
+            var jwtKey = config["JWT_SECRET"] ?? config["Jwt:Secret"];
             var issuer = config["Jwt:Issuer"];
             var audience = config["Jwt:Audience"];
 
