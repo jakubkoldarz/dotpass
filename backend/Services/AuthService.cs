@@ -1,4 +1,5 @@
 ﻿using backend.DTOs.Users.Requests;
+using backend.Exceptions;
 using backend.Interfaces;
 using backend.Models;
 using Microsoft.EntityFrameworkCore;
@@ -25,7 +26,7 @@ namespace backend.Services
 
             if(user == null)
             {
-                throw new BadHttpRequestException("Invalid email address.");
+                throw new BadRequestException("Invalid email address.");
             }
 
             var password = BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash);
@@ -37,7 +38,7 @@ namespace backend.Services
         {
             var userExists = await _db.Users.AnyAsync(u => u.Email == request.Email);
 
-            if (userExists) throw new BadHttpRequestException("Email already in use.");
+            if (userExists) throw new BadRequestException("Email already in use.");
 
             var passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
 
