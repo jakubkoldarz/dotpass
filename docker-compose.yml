@@ -12,12 +12,13 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - dotpass_data:/var/lib/postgresql/data
+      - dotpass_data:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
       interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 15
+      start_period: 15s
 
   emqx-broker:
     image: emqx/emqx:latest
