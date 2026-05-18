@@ -20,25 +20,30 @@ namespace backend.Services
             )).ToList();
         }
 
-        public async Task<UserResponse> LoginAsync(LoginUserRequest request)
+        public async Task<User> LoginAsync(LoginUserRequest request)
         {
             var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
 
             if(user == null)
             {
-                throw new BadRequestException("Invalid email address.");
+                throw new BadRequestException("Invalid email address");
             }
 
-            var password = BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash);
+            var isPassValid = BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash);
 
-            return new UserResponse(user.Id, user.Firstname, user.Lastname, user.Email);
+            if(!isPassValid)
+            {
+                throw new BadRequestException("Invalid credentials");
+            }
+
+            return user;
         }
 
         public async Task<UserResponse> RegisterAsync(RegisterUserRequest request)
         {
             var userExists = await _db.Users.AnyAsync(u => u.Email == request.Email);
 
-            if (userExists) throw new BadRequestException("Email already in use.");
+            if (userExists) throw new BadRequestException("Email already in use");
 
             var passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
 

@@ -4,7 +4,7 @@ using System.Text;
 
 namespace backend.Extension
 {
-    public static class JWTConfiguration
+    public static class JwtConfiguration
     {
         public static IServiceCollection AddJWTConfiguration(this IServiceCollection services, IConfiguration config)
         {
