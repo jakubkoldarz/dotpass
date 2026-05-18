@@ -9,18 +9,6 @@ namespace backend.Services
 {
     public class AuthService(ApplicationDbContext _db, ITokenService _tokenService) : IAuthService
     {
-        public async Task<IEnumerable<UserResponse>> GetAllAsync()
-        {
-            var users = await _db.Users.ToListAsync();
-
-            return users.Select(u => new UserResponse(
-                u.Id,
-                u.Email,
-                u.Firstname,
-                u.Lastname
-            )).ToList();
-        }
-
         public async Task<TokensResponse> LoginAsync(LoginUserRequest request)
         {
             var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
@@ -37,9 +25,27 @@ namespace backend.Services
                 throw new BadRequestException("Invalid email address or password");
             }
 
+            user.RefreshToken = _tokenService.CreateRefreshToken();
+            user.RefreshTokenExpiry = DateTime.UtcNow.AddDays(7);
+            await _db.SaveChangesAsync();
+
             var jwtToken = _tokenService.CreateAccessToken(user);
 
             return new TokensResponse(jwtToken, user.RefreshToken!);
+        }
+
+        public async Task<JwtResponse> RefreshAsync(string refreshToken)
+        {
+            var user = await _db.Users.FirstOrDefaultAsync(u => u.RefreshToken == refreshToken);
+
+            if(user == null || user.RefreshTokenExpiry < DateTime.UtcNow)
+            {
+                throw new UnauthorizedException("Session expired. Please login again.");
+            }
+
+            var jwtToken = _tokenService.CreateAccessToken(user);
+
+            return new JwtResponse(jwtToken);
         }
 
         public async Task<UserResponse> RegisterAsync(RegisterUserRequest request)

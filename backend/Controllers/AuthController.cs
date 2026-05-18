@@ -1,4 +1,5 @@
 ﻿using backend.DTOs.Users.Requests;
+using backend.Exceptions;
 using backend.Extension;
 using backend.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -21,7 +22,7 @@ namespace backend.Controllers
         {
             var tokens = await _authService.LoginAsync(request);
 
-            Response.Cookies.Append("refreshToken", "rt", new CookieOptions
+            Response.Cookies.Append("refreshToken", tokens.RefreshToken, new CookieOptions
             {
                 HttpOnly = true,
                 Secure = true,
@@ -31,5 +32,21 @@ namespace backend.Controllers
 
             return Ok(new JwtResponse(tokens.JwtToken));
         }
+
+        [HttpPost("refresh")]
+        public async Task<IActionResult> Refresh()
+        {
+            var refreshToken = Request.Cookies["refreshToken"];
+
+            if(string.IsNullOrEmpty(refreshToken))
+            {
+                throw new UnauthorizedException("No refresh token provided");
+            }
+
+            var jwtToken = await _authService.RefreshAsync(refreshToken);
+
+            return Ok(jwtToken);
+        }
+
     }
 }

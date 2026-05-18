@@ -7,5 +7,6 @@ namespace backend.Interfaces
     {
         Task<UserResponse> RegisterAsync(RegisterUserRequest request);
         Task<TokensResponse> LoginAsync(LoginUserRequest request);
+        Task<JwtResponse> RefreshAsync(string refreshToken);
     }
 }
