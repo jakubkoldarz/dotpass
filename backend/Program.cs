@@ -1,16 +1,33 @@
 using backend;
 using backend.Extension;
 using backend.Middleware;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Net;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
+builder.Services.AddControllers().ConfigureApiBehaviorOptions(options =>
+{
+    options.InvalidModelStateResponseFactory = context =>
+    {
+        var errorMessage = context.ModelState.Values
+            .SelectMany(v => v.Errors)
+            .Select(e => e.ErrorMessage)
+            .FirstOrDefault() ?? "Validation failed";
+
+        return new BadRequestObjectResult(new
+        {
+            error = errorMessage,
+            status = HttpStatusCode.BadRequest
+        });
+    };
+});
 builder.Services.AddOpenApi();
 builder.Services.Configure<RouteOptions>(options => options.LowercaseUrls = true);
 
 builder.Services.AddDatabaseConfiguration(builder.Configuration);
-builder.Services.AddJWTConfiguration(builder.Configuration); 
+builder.Services.AddJWTConfiguration(builder.Configuration);
 builder.Services.AddServices();
 
 var app = builder.Build();
