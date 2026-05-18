@@ -13,6 +13,12 @@ services:
       - "5432:5432"
     volumes:
       - dotpass_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   emqx-broker:
     image: emqx/emqx:latest
     container_name: emqx-container
@@ -32,11 +38,15 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      - db-postgres
-      - emqx-broker
+      db-postgres:
+        condition: service_healthy
+      emqx-broker:
+        condition: service_started
+
     environment:
       - ConnectionStrings__DefaultConnection=Host=db-postgres;Database=${DB_NAME};Username=${DB_USER};Password=${DB_PASSWORD}
       - MQTT__Host=emqx-broker
+      - JWT_SECRET=${JWT_SECRET}
 
 volumes:
   dotpass_data:

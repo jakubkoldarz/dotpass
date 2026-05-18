@@ -1,15 +1,17 @@
 using backend;
+using backend.Extension;
+using backend.Middleware;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
+builder.Services.Configure<RouteOptions>(options => options.LowercaseUrls = true);
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(connectionString));
+builder.Services.AddDatabaseConfiguration(builder.Configuration);
+builder.Services.AddJWTConfiguration(builder.Configuration); 
+builder.Services.AddServices();
 
 var app = builder.Build();
 
@@ -34,10 +36,11 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
+app.UseMiddleware<ExceptionMiddleware>();
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-
 app.Run();
