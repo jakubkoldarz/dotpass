@@ -1,4 +1,5 @@
-﻿using backend.Exceptions;
+﻿using backend.DTOs.Users.Requests;
+using backend.Exceptions;
 using backend.Interfaces;
 using backend.Models;
 using Microsoft.IdentityModel.Tokens;
@@ -8,7 +9,7 @@ using System.Text;
 
 namespace backend.Services
 {
-    public class TokenService(IConfiguration config) : ITokenService
+    public class TokenService(ApplicationDbContext _db, IConfiguration config) : ITokenService
     {
         public string CreateAccessToken(User user)
         {
@@ -35,6 +36,14 @@ namespace backend.Services
             var tokenHandler = new JwtSecurityTokenHandler();
             var token = tokenHandler.CreateToken(tokenDescriptor);
             return tokenHandler.WriteToken(token);
+        }
+
+        public string CreateRefreshToken()
+        {
+            var randomNumber = new byte[64];
+            using var rng = System.Security.Cryptography.RandomNumberGenerator.Create();
+            rng.GetBytes(randomNumber);
+            return Convert.ToBase64String(randomNumber);
         }
     }
 }

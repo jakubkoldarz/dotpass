@@ -25,6 +25,8 @@ namespace backend.Models
         [MaxLength(50)]
         public string Lastname { get; set; } = string.Empty;
 
+        public string? RefreshToken { get; set; }
+        public DateTime? RefreshTokenExpiry { get; set; }
 
         public ICollection<WorkspaceMember> WorkspaceMemberships { get; set; } = [];
         public ICollection<DeviceUserAccess> DeviceAccesses { get; set; } = [];

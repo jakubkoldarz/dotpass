@@ -19,9 +19,17 @@ namespace backend.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginUserRequest request)
         {
-            var user = await _authService.LoginAsync(request);
-            var token = _tokenService.CreateAccessToken(user);
-            return Ok(new JwtResponse(token));
+            var tokens = await _authService.LoginAsync(request);
+
+            Response.Cookies.Append("refreshToken", "rt", new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Strict,
+                Expires = DateTime.UtcNow.AddDays(7)
+            });
+
+            return Ok(new JwtResponse(tokens.JwtToken));
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using backend.DTOs.Users.Requests;
+using backend.DTOs.Users.Responses;
 using backend.Exceptions;
 using backend.Interfaces;
 using backend.Models;
@@ -6,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace backend.Services
 {
-    public class AuthService(ApplicationDbContext _db) : IAuthService
+    public class AuthService(ApplicationDbContext _db, ITokenService _tokenService) : IAuthService
     {
         public async Task<IEnumerable<UserResponse>> GetAllAsync()
         {
@@ -20,7 +21,7 @@ namespace backend.Services
             )).ToList();
         }
 
-        public async Task<User> LoginAsync(LoginUserRequest request)
+        public async Task<TokensResponse> LoginAsync(LoginUserRequest request)
         {
             var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
 
@@ -36,7 +37,9 @@ namespace backend.Services
                 throw new BadRequestException("Invalid email address or password");
             }
 
-            return user;
+            var jwtToken = _tokenService.CreateAccessToken(user);
+
+            return new TokensResponse(jwtToken, user.RefreshToken!);
         }
 
         public async Task<UserResponse> RegisterAsync(RegisterUserRequest request)
@@ -52,9 +55,11 @@ namespace backend.Services
                 Firstname = request.Firstname,
                 Lastname = request.Lastname,
                 Email = request.Email,
-                PasswordHash = passwordHash
+                PasswordHash = passwordHash,
+                RefreshToken = _tokenService.CreateRefreshToken(),
+                RefreshTokenExpiry = DateTime.UtcNow.AddDays(7)
             };
-
+            
             var newUser = _db.Users.Add(user);
             await _db.SaveChangesAsync();
 
