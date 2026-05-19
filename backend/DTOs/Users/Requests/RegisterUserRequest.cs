@@ -2,11 +2,11 @@
 
 namespace backend.DTOs.Users.Requests
 {
-    public record RegisterUserRequest(
-
-        [property: Required, EmailAddress]        string Email,
-        [property: Required, StringLength(30)]    string Firstname,
-        [property: Required, StringLength(30)]    string Lastname,
-        [property: Required, MinLength(8)]        string Password
-    );
+    public class RegisterUserRequest
+    {
+        [Required, EmailAddress] public string Email { get; set; } = string.Empty;
+        [Required, StringLength(30)] public string Firstname { get; set; } = string.Empty;
+        [Required, StringLength(30)] public string Lastname { get; set; } = string.Empty;
+        [Required, MinLength(8)] public string Password { get; set; } = string.Empty;
+    }
 }
