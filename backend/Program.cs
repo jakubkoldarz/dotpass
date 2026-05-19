@@ -22,8 +22,10 @@ builder.Services.AddControllers().ConfigureApiBehaviorOptions(options =>
             status = HttpStatusCode.BadRequest
         });
     };
-});
-builder.Services.AddOpenApi();
+});  
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
 builder.Services.Configure<RouteOptions>(options => options.LowercaseUrls = true);
 
 builder.Services.AddDatabaseConfiguration(builder.Configuration);
@@ -50,7 +52,8 @@ using (var scope = app.Services.CreateScope())
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
 app.UseMiddleware<ExceptionMiddleware>();

@@ -43,11 +43,18 @@ services:
         condition: service_healthy
       emqx-broker:
         condition: service_started
-
     environment:
       - ConnectionStrings__DefaultConnection=Host=db-postgres;Database=${DB_NAME};Username=${DB_USER};Password=${DB_PASSWORD}
       - MQTT__Host=emqx-broker
       - JWT_SECRET=${JWT_SECRET}
+      #- ASPNETCORE_ENVIRONMENT=Development # Uncomment for development environment
+    develop:
+        watch:
+            - path: ./backend
+              action: rebuild
+              ignore:
+                - bin/
+                - obj/
 
 volumes:
   dotpass_data:
