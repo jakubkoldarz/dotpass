@@ -9,7 +9,7 @@ using System.Text;
 
 namespace backend.Services
 {
-    public class TokenService(ApplicationDbContext _db, IConfiguration config) : ITokenService
+    public class TokenService(IConfiguration config) : ITokenService
     {
         public string CreateAccessToken(User user)
         {

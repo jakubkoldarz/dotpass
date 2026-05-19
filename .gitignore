@@ -533,3 +533,5 @@ mobile/android/app/src/main/assets/index.android.bundle
 # PSQL
 postgres_data/
 *.lscache
+
+docker-compose.override.yml
