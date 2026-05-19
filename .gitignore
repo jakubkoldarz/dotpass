@@ -515,3 +515,5 @@ mobile/coverage/
 # PSQL
 postgres_data/
 *.lscache
+
+docker-compose.override.yml

@@ -8,7 +8,7 @@ namespace backend.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class AuthController(IAuthService _authService, ITokenService _tokenService) : ControllerBase
+    public class AuthController(IAuthService _authService) : ControllerBase
     {
         [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterUserRequest request)
@@ -43,9 +43,17 @@ namespace backend.Controllers
                 throw new UnauthorizedException("No refresh token provided");
             }
 
-            var jwtToken = await _authService.RefreshAsync(refreshToken);
+            var tokens = await _authService.RefreshAsync(refreshToken);
 
-            return Ok(jwtToken);
+            Response.Cookies.Append("refreshToken", tokens.RefreshToken, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Strict,
+                Expires = DateTime.UtcNow.AddDays(7)
+            });
+
+            return Ok(new JwtResponse(tokens.JwtToken));
         }
 
     }
