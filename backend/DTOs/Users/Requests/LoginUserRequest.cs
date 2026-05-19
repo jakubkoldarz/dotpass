@@ -3,8 +3,7 @@
 namespace backend.DTOs.Users.Requests
 {
     public record LoginUserRequest(
-
-        [Required][EmailAddress] string Email,
-        [Required][MinLength(8)] string Password
+        [property: Required, EmailAddress] string Email,
+        [property: Required, MinLength(8)] string Password
     );
 }
