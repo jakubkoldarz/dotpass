@@ -33,7 +33,6 @@ namespace backend.Services
 
             return new TokensResponse(jwtToken, user.RefreshToken!);
         }
-
         public async Task<TokensResponse> RefreshAsync(string refreshToken)
         {
             var user = await _db.Users.FirstOrDefaultAsync(u => u.RefreshToken == refreshToken);
@@ -52,7 +51,6 @@ namespace backend.Services
 
             return new TokensResponse(jwtToken, newRefreshToken);
         }
-
         public async Task<JwtResponse> RegisterAsync(RegisterUserRequest request)
         {
             var userExists = await _db.Users.AnyAsync(u => u.Email == request.Email);
@@ -61,6 +59,8 @@ namespace backend.Services
 
             var passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
 
+            var isFirstUser = !await _db.Users.AnyAsync();
+
             var user = new User
             {
                 Firstname = request.Firstname,
@@ -68,7 +68,8 @@ namespace backend.Services
                 Email = request.Email,
                 PasswordHash = passwordHash,
                 RefreshToken = _tokenService.CreateRefreshToken(),
-                RefreshTokenExpiry = DateTime.UtcNow.AddDays(7)
+                RefreshTokenExpiry = DateTime.UtcNow.AddDays(7),
+                IsAdmin = isFirstUser
             };
             
             _db.Users.Add(user);
