@@ -5,12 +5,13 @@ Aplikacja umożliwia dołączenie pracowników do firmy i nadanie im odpowiednic
 Wszystkie próby otworzenia drzwi są zapisywanie dla zwiększonej prywatności.
 ## Instalacja
 Aplikację można pobrać ze sklepu play:\
-[Insert link]
+[Link do sklepu play]
 ## Instrukcja obsługi
 Po zalogowaniu się, poproś swoją firmę o kod zaproszenia.\
 Aby otworzyć drzwi, zeskanuj tag odblokowanym telefonem. **(Wymagane NFC)**
 
 Jeśli chcesz wykorzystać dotpass w swojej firmie, skontaktuj się z nami!
+[Dane kontaktowe]
 ## User stories
 ### Użytkownik może:
 - Zarejestrować konto
