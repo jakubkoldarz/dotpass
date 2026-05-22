@@ -3,6 +3,7 @@ using backend.Extension;
 using backend.Middleware;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi;
 using System.Net;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -24,13 +25,26 @@ builder.Services.AddControllers().ConfigureApiBehaviorOptions(options =>
     };
 });  
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Description = "Bearer <token>",
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.Http,
+        Scheme = "Bearer",
+        BearerFormat = "JWT"
+    });
+
+});
 
 builder.Services.Configure<RouteOptions>(options => options.LowercaseUrls = true);
 
 builder.Services.AddDatabaseConfiguration(builder.Configuration);
 builder.Services.AddJWTConfiguration(builder.Configuration);
 builder.Services.AddServices();
+builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
