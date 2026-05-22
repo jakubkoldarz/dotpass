@@ -3,7 +3,7 @@ using backend.Extension;
 using backend.Middleware;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.OpenApi;
+using Scalar.AspNetCore;
 using System.Net;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -25,19 +25,7 @@ builder.Services.AddControllers().ConfigureApiBehaviorOptions(options =>
     };
 });  
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(c =>
-{
-    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        Description = "Bearer <token>",
-        Name = "Authorization",
-        In = ParameterLocation.Header,
-        Type = SecuritySchemeType.Http,
-        Scheme = "Bearer",
-        BearerFormat = "JWT"
-    });
 
-});
 
 builder.Services.Configure<RouteOptions>(options => options.LowercaseUrls = true);
 
@@ -45,6 +33,7 @@ builder.Services.AddDatabaseConfiguration(builder.Configuration);
 builder.Services.AddJWTConfiguration(builder.Configuration);
 builder.Services.AddServices();
 builder.Services.AddAuthorization();
+builder.Services.AddScalarConfiguration();
 
 var app = builder.Build();
 
@@ -66,8 +55,14 @@ using (var scope = app.Services.CreateScope())
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    app.MapOpenApi();
+
+    app.MapScalarApiReference(options =>
+        options.WithTitle("DotPass API - Scalar")
+        .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient)
+        .AddPreferredSecuritySchemes("Bearer")
+        .AddHttpAuthentication("Bearer", bearer => { bearer.Token = ""; })
+    );
 }
 
 app.UseMiddleware<ExceptionMiddleware>();
