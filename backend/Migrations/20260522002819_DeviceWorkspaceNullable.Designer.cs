@@ -12,7 +12,7 @@ using backend.Data;
 namespace backend.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260522001101_DeviceWorkspaceNullable")]
+    [Migration("20260522002819_DeviceWorkspaceNullable")]
     partial class DeviceWorkspaceNullable
     {
         /// <inheritdoc />
@@ -191,8 +191,9 @@ namespace backend.Migrations
                     b.Property<Guid>("WorkspaceId")
                         .HasColumnType("uuid");
 
-                    b.Property<int>("Role")
-                        .HasColumnType("integer");
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.HasKey("UserId", "WorkspaceId");
 

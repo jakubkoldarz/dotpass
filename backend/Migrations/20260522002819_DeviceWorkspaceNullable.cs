@@ -47,14 +47,6 @@ namespace backend.Migrations
                 name: "IX_DeviceGroupAccesses_UserGroupId",
                 table: "DeviceGroupAccesses");
 
-            migrationBuilder.AlterColumn<int>(
-                name: "Role",
-                table: "WorkspaceMembers",
-                type: "integer",
-                nullable: false,
-                oldClrType: typeof(string),
-                oldType: "text");
-
             migrationBuilder.AlterColumn<Guid>(
                 name: "WorkspaceId",
                 table: "Devices",
@@ -160,14 +152,6 @@ namespace backend.Migrations
             migrationBuilder.DropIndex(
                 name: "IX_DeviceGroupAccesses_DeviceId",
                 table: "DeviceGroupAccesses");
-
-            migrationBuilder.AlterColumn<string>(
-                name: "Role",
-                table: "WorkspaceMembers",
-                type: "text",
-                nullable: false,
-                oldClrType: typeof(int),
-                oldType: "integer");
 
             migrationBuilder.AlterColumn<Guid>(
                 name: "WorkspaceId",

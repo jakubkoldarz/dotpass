@@ -10,6 +10,8 @@ namespace backend.Data.Configurations
         {
             builder.HasKey(wm => new { wm.UserId, wm.WorkspaceId });
 
+            builder.Property(wm => wm.Role).HasConversion<string>();
+
             builder.HasOne(wm => wm.User)
                 .WithMany(u => u.WorkspaceMemberships)
                 .HasForeignKey(wm => wm.UserId)

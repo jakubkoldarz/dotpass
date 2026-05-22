@@ -188,8 +188,9 @@ namespace backend.Migrations
                     b.Property<Guid>("WorkspaceId")
                         .HasColumnType("uuid");
 
-                    b.Property<int>("Role")
-                        .HasColumnType("integer");
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.HasKey("UserId", "WorkspaceId");
 

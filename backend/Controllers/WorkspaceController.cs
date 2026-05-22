@@ -53,6 +53,5 @@ namespace backend.Controllers
             var workspace = await _workspaceService.UpdateAsync(workspaceId, request);
             return Ok(workspace);
         }
-
     }
 }
