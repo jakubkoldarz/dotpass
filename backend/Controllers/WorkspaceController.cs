@@ -35,7 +35,7 @@ namespace backend.Controllers
         {
             if (!User.IsAdmin()) throw new ForbiddenException();
             var workspace = await _workspaceService.CreateAsync(request);
-            return Ok(workspace);
+            return Created($"/api/workspace/{workspace.Id}", workspace);
         }
 
         [HttpDelete("{id:guid}")]

@@ -28,7 +28,7 @@ namespace backend.Controllers
         [HttpGet("workspace/{workspaceId:guid}")]
         public async Task<ActionResult<IEnumerable<UserGroupResponse>>> GetAll(Guid workspaceId)
         {
-            var access = await _userGroupService.CheckGroupAccessAsync(User);
+            var access = await _userGroupService.CheckGroupAccessAsync(user: User, workspaceId: workspaceId);
             if (access <= GroupAccessLevel.None) throw new ForbiddenException();
 
             var group = await _userGroupService.GetAllAsync(workspaceId);
