@@ -19,6 +19,6 @@ namespace backend.Models
         public Workspace? Workspace { get; set; }
 
         public ICollection<GroupMember> GroupMembers { get; set; } = [];
-        public ICollection<DeviceGroupAccess> GroupAccesses { get; set; } = [];
+        public ICollection<DeviceGroupAccess> DeviceAccesses { get; set; } = [];
     }
 }

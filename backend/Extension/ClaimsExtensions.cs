@@ -10,7 +10,7 @@ namespace backend.Extension
             var stringUUID = principal.FindFirstValue(ClaimTypes.NameIdentifier);
             if(!Guid.TryParse(stringUUID, out var userUUID))
             {
-                throw new UnauthorizedException("");
+                throw new UnauthorizedException();
             }
             return userUUID;
         }

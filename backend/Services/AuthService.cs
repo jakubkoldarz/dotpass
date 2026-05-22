@@ -1,4 +1,5 @@
-﻿using backend.DTOs.Users.Requests;
+﻿using backend.Data;
+using backend.DTOs.Users.Requests;
 using backend.DTOs.Users.Responses;
 using backend.Exceptions;
 using backend.Interfaces;
