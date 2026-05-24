@@ -26,6 +26,7 @@ services:
     restart: always
     volumes:
       - emqx_data:/opt/emqx/data
+      - /etc/letsencrypt:/etc/letsencrypt:ro
     ports:
       - "1883:1883"   # ESP32 for testing
       - "8883:8883"   # ESP32 SSL
