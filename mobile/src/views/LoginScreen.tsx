@@ -6,6 +6,7 @@ import {
   Platform,
   ScrollView,
   TouchableOpacity,
+  StyleSheet
 } from 'react-native';
 
 import { colors, layout, spacing, typography } from '../styles';
@@ -14,7 +15,13 @@ import Button from '../components/ui/Button';
 import PasswordToggle from '../components/ui/PasswordToggle';
 import { mockLogin } from '../components/shared/Mockdata';
 
-export default function LoginScreen({ navigation }) {
+interface LoginScreenProps {
+  navigation: {
+    navigate: (screen: string, params?: object) => void;
+  };
+}
+
+export default function LoginScreen({ navigation } : LoginScreenProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [passwordVisible, setPasswordVisible] = useState(false);
@@ -107,7 +114,7 @@ export default function LoginScreen({ navigation }) {
   );
 }
 
-const styles = {
+const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
     justifyContent: 'center',
@@ -182,4 +189,4 @@ const styles = {
   right: 12,
   top: 30,
 },
-};
+});

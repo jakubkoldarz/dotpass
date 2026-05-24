@@ -6,6 +6,7 @@ import {
   Platform,
   ScrollView,
   TouchableOpacity,
+  StyleSheet
 } from 'react-native';
 
 import { colors, layout, spacing, typography } from '../styles';
@@ -13,7 +14,21 @@ import Input from '../components/ui/Input';
 import Button from '../components/ui/Button';
 import PasswordToggle from '../components/ui/PasswordToggle';
 
-export default function RegisterScreen({ navigation }) {
+interface RegisterScreenProps {
+  navigation: {
+    navigate: (screen: string) => void;
+    goBack: () => void;
+  };
+}
+
+interface ValidationErrors {
+  name?: string;
+  email?: string;
+  password?: string;
+  confirm?: string;
+}
+
+export default function RegisterScreen({ navigation } : RegisterScreenProps) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -22,10 +37,10 @@ export default function RegisterScreen({ navigation }) {
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [confirmVisible, setConfirmVisible] = useState(false);
 
-  const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState<ValidationErrors>({});
 
   const validate = () => {
-    const newErrors = {};
+    const newErrors: ValidationErrors = {};
 
     if (!name.trim()) newErrors.name = 'Imię jest wymagane';
     if (!email.includes('@')) newErrors.email = 'Podaj poprawny e-mail';
@@ -155,7 +170,7 @@ export default function RegisterScreen({ navigation }) {
   );
 }
 
-const styles = {
+const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
     justifyContent: 'center',
@@ -218,4 +233,4 @@ const styles = {
     color: colors.accent,
     fontWeight: '600',
   },
-};
+});

@@ -3,7 +3,13 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { colors, spacing, radius, typography } from '../../styles';
 import Icon from '../shared/Icon';
 
-export default function AccessRow({ label, sub, onRemove }) {
+type AccessRowProps = {
+  label: string;
+  sub?: string;
+  onRemove: () => void;
+}
+
+export default function AccessRow({ label, sub, onRemove } : AccessRowProps) {
   return (
     <View style={styles.row}>
       <View style={styles.meta}>
