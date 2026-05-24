@@ -1,7 +1,9 @@
 ﻿using backend.DTOs.Users.Requests;
+using backend.DTOs.Users.Responses;
 using backend.Exceptions;
 using backend.Extension;
 using backend.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace backend.Controllers
@@ -56,5 +58,26 @@ namespace backend.Controllers
             return Ok(new JwtResponse(tokens.JwtToken));
         }
 
+        [Authorize]
+        [HttpPost("logout")]
+        public async Task<IActionResult> Logout()
+        {
+            await _authService.LogoutAsync(User.GetUserId());
+            Response.Cookies.Delete("refreshToken", new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Strict
+            });
+            return Ok();
+        }
+
+        [Authorize]
+        [HttpPost("me")]
+        public async Task<ActionResult<UserDetailsResponse>> Me()
+        {
+            var user = await _authService.UserDetailsAsync(User.GetUserId());
+            return Ok(user);
+        }
     }
 }

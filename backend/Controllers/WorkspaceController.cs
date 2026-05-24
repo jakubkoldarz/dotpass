@@ -61,6 +61,9 @@ namespace backend.Controllers
         [HttpGet("{workspaceId:guid}/members")]
         public async Task<ActionResult<IEnumerable<UserResponse>>> GetMembers(Guid workspaceId)
         {
+            var access = await _workspaceService.CheckWorkspaceAccessAsync(User.GetUserId(), workspaceId);
+            if (access <= AccessLevel.None) throw new ForbiddenException();
+
             var members = await _workspaceService.GetWorkspaceMembersAsync(workspaceId);
             return Ok(members);
         }
@@ -69,6 +72,8 @@ namespace backend.Controllers
         public async Task<IActionResult> AddToWorkspace(Guid workspaceId, AddToWorkspaceRequest request)
         {
             var access = await _workspaceService.CheckWorkspaceAccessAsync(User.GetUserId(), workspaceId);
+            if (access <= AccessLevel.ReadOnly) throw new ForbiddenException();
+
             await _workspaceService.AddToWorkspaceAsync(workspaceId, request);
             return Ok();
         }
@@ -76,6 +81,9 @@ namespace backend.Controllers
         [HttpPut("{workspaceId:guid}/members")]
         public async Task<IActionResult> UpdateWorkspaceRole(Guid workspaceId, UpdateWorkspaceMemberRequest request)
         {
+            var access = await _workspaceService.CheckWorkspaceAccessAsync(User.GetUserId(), workspaceId);
+            if (access <= AccessLevel.ReadOnly) throw new ForbiddenException();
+
             await _workspaceService.UpdateWorkspaceRoleAsync(workspaceId, request);
             return Ok();
         }
@@ -83,6 +91,11 @@ namespace backend.Controllers
         [HttpDelete("{workspaceId:guid}/members")]
         public async Task<IActionResult> RemoveFromWorkspace(Guid workspaceId, RemoveFromWorkspaceRequest request)
         {
+            var access = await _workspaceService.CheckWorkspaceAccessAsync(User.GetUserId(), workspaceId);
+            if (access <= AccessLevel.ReadOnly) throw new ForbiddenException();
+
+            if(User.GetUserId() == request.UserId) throw new BadRequestException("You cannot remove yourself from workspace");
+
             await _workspaceService.RemoveFromWorkspaceAsync(workspaceId, request);
             return Ok();
         }

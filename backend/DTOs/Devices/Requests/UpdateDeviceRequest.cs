@@ -6,5 +6,7 @@ namespace backend.DTOs.Devices.Requests
     {
         [Required]
         public string Name { get; set; } = string.Empty;
+        [Required]
+        public bool IsPublicInWorkspace { get; set; }
     }
 }

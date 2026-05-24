@@ -12,6 +12,7 @@ namespace backend.Extension
             services.AddScoped<IWorkspaceService, WorkspaceService>();
             services.AddScoped<IUserGroupService, UserGroupService>();
             services.AddScoped<IDeviceService, DeviceService>();
+            services.AddHttpClient<IEmqxService, EmqxService>();
 
             return services;
         }
