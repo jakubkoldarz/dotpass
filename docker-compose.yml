@@ -49,8 +49,10 @@ services:
         condition: service_started
     environment:
       - ConnectionStrings__DefaultConnection=Host=db-postgres;Database=${DB_NAME};Username=${DB_USER};Password=${DB_PASSWORD}
-      - MQTT__Host=emqx-broker
       - JWT_SECRET=${JWT_SECRET}
+      - EMQX_API_URL=${EMQX_API_URL}
+      - EMQX_API_KEY=${EMQX_API_KEY}
+      - EMQX_API_SECRET=${EMQX_API_SECRET}
 
 volumes:
   dotpass_data:

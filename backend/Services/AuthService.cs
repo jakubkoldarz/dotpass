@@ -1,9 +1,14 @@
 ﻿using backend.Data;
+using backend.DTOs.Devices.Responses;
+using backend.DTOs.UserGroups.Responses;
 using backend.DTOs.Users.Requests;
 using backend.DTOs.Users.Responses;
+using backend.DTOs.Workspaces.Responses;
 using backend.Exceptions;
 using backend.Interfaces;
 using backend.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace backend.Services
@@ -34,6 +39,17 @@ namespace backend.Services
 
             return new TokensResponse(jwtToken, user.RefreshToken!);
         }
+
+        public async Task LogoutAsync(Guid userId)
+        {
+            var user = await _db.Users.FindAsync(userId);
+            if (user == null) throw new BadRequestException("Provided user does not exist");
+
+            user.RefreshTokenExpiry = null;
+            user.RefreshToken = null;
+            await _db.SaveChangesAsync();
+        }
+
         public async Task<TokensResponse> RefreshAsync(string refreshToken)
         {
             var user = await _db.Users.FirstOrDefaultAsync(u => u.RefreshToken == refreshToken);
@@ -79,6 +95,40 @@ namespace backend.Services
             var token = _tokenService.CreateAccessToken(user);
 
             return new JwtResponse(token);
+        }
+
+        public async Task<UserDetailsResponse> UserDetailsAsync(Guid userId)
+        {
+            var user = await _db.Users.Where(u => u.Id == userId)
+                .Select(u => new UserDetailsResponse
+                {
+                    Id = userId,
+                    Email = u.Email,
+                    Firstname = u.Firstname,
+                    Lastname = u.Lastname,
+                    UserGroups = u.GroupMemberships.Select(gm => new UserGroupResponse
+                    {
+                        Id = gm.UserGroupId,
+                        Name = gm.UserGroup!.Name,
+                        WorkspaceId = gm.UserGroup.WorkspaceId
+                    }),
+                    DeviceAccesses = u.DeviceAccesses.Select(da => new BasicDeviceResponse
+                    {
+                        Id = da.DeviceId,
+                        IsPublicInWorkspace = da.Device!.IsPublicInWorkspace ?? false,
+                        Name = da.Device.Name
+                    }),
+                    Workspaces = u.WorkspaceMemberships.Select(wm => new WorkspaceResponse
+                    {
+                        Id = wm.WorkspaceId,
+                        Name = wm.Workspace!.Name
+                    })
+                })
+                .FirstOrDefaultAsync();
+
+            if (user == null) throw new NotFoundException();
+
+            return user;
         }
     }
 }
