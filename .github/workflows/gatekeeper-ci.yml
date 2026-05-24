@@ -12,8 +12,8 @@ jobs:
     permissions:
       pull-requests: read
     outputs:
-      backend: ${{ steps:filter.outputs.backend }}
-      frontend: ${{ steps:filter.outputs.frontend }}
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
     steps:
     - name: Checkout kodu
       uses: actions/checkout@v4
