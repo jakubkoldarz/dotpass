@@ -1,4 +1,6 @@
 import React from 'react';
+import { StyleProp, ViewStyle } from 'react-native';
+
 import {
   Nfc,
   Server,
@@ -63,7 +65,15 @@ const MAP = {
   HandMetal
 };
 
-export default function Icon({ name, size = 20, color = '#FFFFFF', style, strokeWidth = 1.75 }) {
+type IconProps = {
+  name: keyof typeof MAP;
+  size?: number;
+  color?: string;
+  style?: StyleProp<ViewStyle>;
+  strokeWidth?: number;
+}
+
+export default function Icon({ name, size = 20, color = '#FFFFFF', style, strokeWidth = 1.75 } : IconProps) {
   const Component = MAP[name];
   if (!Component) {
     return null;

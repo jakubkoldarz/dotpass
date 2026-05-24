@@ -7,7 +7,21 @@ import Button from '../ui/Button';
 
 import { useNavigation } from '@react-navigation/native';
 
-export default function DeviceInfoTab({ device, onRename, onNfcWrite, onTest, status }) {
+type DeviceStructure = {
+  id: string;
+  name: string;
+  macaddress: string;
+}
+
+type DeviceInfoTabProps = {
+  device: DeviceStructure;
+  onRename: (newName: string) => void;
+  onNfcWrite?: () => void;
+  onTest: () => void;
+  status: 'ok' | 'warning' | 'error';
+}
+
+export default function DeviceInfoTab({ device, onRename, onNfcWrite, onTest, status }: DeviceInfoTabProps) {
 
     const navigation = useNavigation();
 

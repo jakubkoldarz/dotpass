@@ -1,8 +1,13 @@
 import React from 'react';
-import { Text, StyleSheet } from 'react-native';
+import { Text, StyleSheet, StyleProp, TextStyle } from 'react-native';
 import { typography, spacing } from '../../styles';
 
-export default function SectionLabel({ children, style }) {
+type SectionLabelProps = {
+  children: React.ReactNode;
+  style?: StyleProp<TextStyle>;
+}
+
+export default function SectionLabel({ children, style } : SectionLabelProps) {
   return <Text style={[styles.label, style]}>{children}</Text>;
 }
 

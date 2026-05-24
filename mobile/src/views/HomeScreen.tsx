@@ -6,7 +6,22 @@ import Icon from '../components/shared/Icon';
 import Tile from '../components/ui/Tile';
 import AdminBanner from '../components/ui/AdminBanner';
 
-export default function HomeScreen({ navigation, route }) {
+interface HomeScreenProps {
+  navigation: {
+    navigate: (screen: string) => void;
+    replace: (screen: string) => void;
+  };
+  route: {
+    params?: {
+      user?: {
+        name: string;
+        isAdmin: boolean;
+      }
+    }
+  }
+}
+
+export default function HomeScreen({ navigation, route } : HomeScreenProps) {
   const user = route.params?.user ?? { name: 'Użytkownik', isAdmin: false };
   const isAdmin = user.isAdmin ?? false;
 
@@ -34,14 +49,14 @@ export default function HomeScreen({ navigation, route }) {
       disabled: true,
       onPress: () => {},
     },
-  ];
+  ] as const;
 
   return (
     <View style={layout.screenRoot}>
       {/* Nagłówek */}
       <View style={styles.header}>
         <View>
-          <Text style={styles.greeting}>Witaj 👋</Text>
+          <Text style={styles.greeting}>Witaj</Text>
           <Text style={styles.role}>
             Zalogowany jako{' '}
             <Text style={[styles.roleHighlight, isAdmin && styles.roleAdmin]}>

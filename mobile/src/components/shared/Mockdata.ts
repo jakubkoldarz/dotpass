@@ -69,19 +69,25 @@ export const INITIAL_ACCESS_RULES = {
 
 // ─── Logi dostępu (dużo, realistyczne) ────────────────────────────────────────
 
-function randomItem(arr) {
+function randomItem(arr: any[]) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-function randomDateWithin(daysBack) {
+function randomDateWithin(daysBack: number) : Date {
   const now = Date.now();
   const offset = Math.random() * daysBack * 24 * 60 * 60 * 1000;
-  return new Date(now - offset).toISOString();
+  return new Date(now - offset);
 }
 
-export const MOCK_LOGS = [];
+type Log = {
+  id: number;
+  deviceId: number;
+  userId: number;
+  timestamp: Date;
+  granted: boolean;
+}
+export const MOCK_LOGS: Log[] = [];
 
-// Generujemy 300 logów
 for (let i = 0; i < 300; i++) {
   MOCK_LOGS.push({
     id: i + 1,
@@ -93,11 +99,11 @@ for (let i = 0; i < 300; i++) {
 }
 
 // Sortujemy od najnowszych
-MOCK_LOGS.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+MOCK_LOGS.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
 
 // ─── Funkcje API mock ─────────────────────────────────────────────────────────
 
-export function mockLogin(email, password) {
+export function mockLogin(email: string, password: string) {
   const user = MOCK_USERS.find(
     u => u.email.toLowerCase() === email.trim().toLowerCase() && u.password === password
   );
@@ -121,6 +127,6 @@ export async function fetchLogs() {
   return [...MOCK_LOGS];
 }
 
-function delay(ms) {
-  return new Promise(r => setTimeout(r, ms));
+function delay(ms: number) {
+  return new Promise((r) => setTimeout(() => r(undefined), ms));
 }

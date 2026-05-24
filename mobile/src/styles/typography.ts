@@ -33,4 +33,4 @@ export const typography = {
   mono: {
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
   },
-};
+} as const;

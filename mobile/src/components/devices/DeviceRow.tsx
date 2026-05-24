@@ -3,7 +3,19 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { colors, radius, spacing, typography } from '../../styles';
 import Icon from '../shared/Icon';
 
-export default function DeviceRow({ device, status, onPress }) {
+type DeviceProps = {
+  id?: string;
+  name?: string;
+  macaddress: string;
+}
+
+type DeviceRowProps = {
+  device: DeviceProps;
+  status: 'ok' | 'warning' | 'error';
+  onPress: () => void;
+}
+
+export default function DeviceRow({ device, status, onPress } : DeviceRowProps) {
   const statusColor =
     status === 'error'   ? colors.error :
     status === 'warning' ? '#FFB020' :
@@ -24,7 +36,7 @@ export default function DeviceRow({ device, status, onPress }) {
         <Text style={styles.mac}>{device.macaddress}</Text>
       </View>
 
-      <View style={styles.statusDot(statusColor)} />
+      <View style={[styles.statusDot, {backgroundColor: statusColor}]} />
       <Icon name="ChevronRight" size={18} color={colors.dim} />
     </TouchableOpacity>
   );
@@ -60,10 +72,9 @@ const styles = StyleSheet.create({
     marginTop: 3,
     ...typography.mono,
   },
-  statusDot: (color) => ({
+  statusDot: {
     width: 12,
     height: 12,
     borderRadius: 6,
-    backgroundColor: color,
-  }),
+  },
 });

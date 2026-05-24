@@ -1,6 +1,13 @@
 import React from 'react';
-import { View, Text, TextInput, StyleSheet } from 'react-native';
+import { View, Text, TextInput, StyleSheet, StyleProp, ViewStyle, TextInputProps } from 'react-native';
 import { colors, radius, spacing, typography } from '../../styles';
+
+type InputProps = TextInputProps & {
+  label?: string;
+  error?: string;
+  secure?: boolean;
+  style?: StyleProp<ViewStyle>;
+}
 
 export default function Input({
   label,
@@ -11,10 +18,10 @@ export default function Input({
   secure = false,
   style,
   ...rest
-}) {
+} : InputProps) {
   return (
     <View style={styles.wrapper}>
-      {label && <Text style={styles.label}>{label}</Text>}
+      {label && <Text style={[styles.label, typography.fieldLabel as any]}>{label}</Text>}
 
       <TextInput
         value={value}

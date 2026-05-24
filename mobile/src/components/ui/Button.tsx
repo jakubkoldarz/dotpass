@@ -1,15 +1,26 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { TouchableOpacity, Text, StyleSheet, ViewStyle, TextStyle, StyleProp } from 'react-native';
 import { colors, radius, spacing, typography } from '../../styles';
+
+type ButtonVariant = 'primary' | 'admin' | 'cancel';
+
+type ButtonProps = {
+  title: string;
+  onPress: () => void;
+  variant?: ButtonVariant;
+  disabled?: boolean;
+  style?: StyleProp<ViewStyle>;
+  textStyle?: StyleProp<TextStyle>;
+}
 
 export default function Button({
   title,
   onPress,
-  variant = 'primary',   // primary | admin | cancel
+  variant = 'primary',
   disabled = false,
   style,
   textStyle,
-}) {
+} : ButtonProps) {
   return (
     <TouchableOpacity
       onPress={onPress}
