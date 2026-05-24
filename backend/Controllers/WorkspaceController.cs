@@ -1,8 +1,10 @@
-﻿using backend.DTOs.Workspaces.Requests;
+﻿using backend.DTOs.Users.Requests;
+using backend.DTOs.Workspaces.Requests;
 using backend.DTOs.Workspaces.Responses;
 using backend.Exceptions;
 using backend.Extension;
 using backend.Interfaces;
+using backend.Models.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
@@ -22,10 +24,12 @@ namespace backend.Controllers
             return Ok(workspaces);
         }
 
-        [HttpGet("{id:guid}")]
-        public async Task<ActionResult<WorkspaceResponse>> GetSingle([FromRoute(Name = "id")] Guid workspaceId)
+        [HttpGet("{workspaceId:guid}")]
+        public async Task<ActionResult<WorkspaceDetailsResponse>> GetSingle(Guid workspaceId)
         {
-            if (!User.IsAdmin()) throw new ForbiddenException();
+            var access = await _workspaceService.CheckWorkspaceAccessAsync(User.GetUserId(), workspaceId);
+            if (access <= AccessLevel.ReadOnly) throw new ForbiddenException();
+
             var workspace = await _workspaceService.GetSingleAsync(workspaceId);
             return Ok(workspace);
         }
@@ -38,20 +42,49 @@ namespace backend.Controllers
             return Created($"/api/workspace/{workspace.Id}", workspace);
         }
 
-        [HttpDelete("{id:guid}")]
-        public async Task<ActionResult> Delete([FromRoute(Name = "id")] Guid workspaceId)
+        [HttpDelete("{workspaceId:guid}")]
+        public async Task<ActionResult> Delete(Guid workspaceId)
         {
             if (!User.IsAdmin()) throw new ForbiddenException();
             await _workspaceService.DeleteAsync(workspaceId);
             return NoContent();
         }
 
-        [HttpPut("{id:guid}")]
-        public async Task<ActionResult<WorkspaceResponse>> Update([FromRoute(Name = "id")] Guid workspaceId, UpdateWorkspaceRequest request)
+        [HttpPut("{workspaceId:guid}")]
+        public async Task<ActionResult<WorkspaceResponse>> Update(Guid workspaceId, UpdateWorkspaceRequest request)
         {
             if (!User.IsAdmin()) throw new ForbiddenException();
             var workspace = await _workspaceService.UpdateAsync(workspaceId, request);
             return Ok(workspace);
+        }
+
+        [HttpGet("{workspaceId:guid}/members")]
+        public async Task<ActionResult<IEnumerable<UserResponse>>> GetMembers(Guid workspaceId)
+        {
+            var members = await _workspaceService.GetWorkspaceMembersAsync(workspaceId);
+            return Ok(members);
+        }
+
+        [HttpPost("{workspaceId:guid}/members")]
+        public async Task<IActionResult> AddToWorkspace(Guid workspaceId, AddToWorkspaceRequest request)
+        {
+            var access = await _workspaceService.CheckWorkspaceAccessAsync(User.GetUserId(), workspaceId);
+            await _workspaceService.AddToWorkspaceAsync(workspaceId, request);
+            return Ok();
+        }
+
+        [HttpPut("{workspaceId:guid}/members")]
+        public async Task<IActionResult> UpdateWorkspaceRole(Guid workspaceId, UpdateWorkspaceMemberRequest request)
+        {
+            await _workspaceService.UpdateWorkspaceRoleAsync(workspaceId, request);
+            return Ok();
+        }
+
+        [HttpDelete("{workspaceId:guid}/members")]
+        public async Task<IActionResult> RemoveFromWorkspace(Guid workspaceId, RemoveFromWorkspaceRequest request)
+        {
+            await _workspaceService.RemoveFromWorkspaceAsync(workspaceId, request);
+            return Ok();
         }
     }
 }

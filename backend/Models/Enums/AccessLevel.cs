@@ -1,6 +1,6 @@
 ﻿namespace backend.Models.Enums
 {
-    public enum GroupAccessLevel
+    public enum AccessLevel
     {
         None,
         ReadOnly,

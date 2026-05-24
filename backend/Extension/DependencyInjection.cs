@@ -10,6 +10,8 @@ namespace backend.Extension
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IWorkspaceService, WorkspaceService>();
+            services.AddScoped<IUserGroupService, UserGroupService>();
+            services.AddScoped<IDeviceService, DeviceService>();
 
             return services;
         }

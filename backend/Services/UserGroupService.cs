@@ -65,11 +65,11 @@ namespace backend.Services
             return group;
         }
 
-        public async Task<GroupAccessLevel> CheckGroupAccessAsync(ClaimsPrincipal user, Guid? userGroupId = null, Guid? workspaceId = null)
+        public async Task<AccessLevel> CheckGroupAccessAsync(ClaimsPrincipal user, Guid? userGroupId = null, Guid? workspaceId = null)
         {
             var userId = user.GetUserId();
 
-            if (user.IsAdmin()) return GroupAccessLevel.FullAccess;
+            if (user.IsAdmin()) return AccessLevel.FullAccess;
 
             if (userGroupId == null && workspaceId != null)
             {
@@ -79,9 +79,9 @@ namespace backend.Services
                     .FirstOrDefaultAsync();
 
                 if (workspaceRole == WorkspaceRole.Moderator)
-                    return GroupAccessLevel.FullAccess;
+                    return AccessLevel.FullAccess;
 
-                return GroupAccessLevel.None;
+                return AccessLevel.None;
             }
 
             if (userGroupId != null)
@@ -98,16 +98,16 @@ namespace backend.Services
                     })
                     .FirstOrDefaultAsync();
 
-                if (accessData == null) return GroupAccessLevel.None; 
+                if (accessData == null) return AccessLevel.None; 
 
                 if (accessData.WorkspaceRole == WorkspaceRole.Moderator)
-                    return GroupAccessLevel.FullAccess;
+                    return AccessLevel.FullAccess;
 
                 if (accessData.IsGroupMember)
-                    return GroupAccessLevel.ReadOnly;
+                    return AccessLevel.ReadOnly;
             }
 
-            return GroupAccessLevel.None;
+            return AccessLevel.None;
         }
 
         public async Task<UserGroupResponse> CreateAsync(Guid workspaceId, CreateUserGroupRequest request)

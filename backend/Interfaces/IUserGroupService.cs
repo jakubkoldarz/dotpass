@@ -14,6 +14,6 @@ namespace backend.Services
         Task DeleteAsync(Guid userGroupId);
         Task AddToGroupAsync(Guid userToAddId, Guid userGroupId);
         Task RemoveFromGroupAsync(Guid userToRemoveId, Guid userGroupId);
-        Task<GroupAccessLevel> CheckGroupAccessAsync(ClaimsPrincipal user, Guid? userGroupId = null, Guid? workspaceId = null);
+        Task<AccessLevel> CheckGroupAccessAsync(ClaimsPrincipal user, Guid? userGroupId = null, Guid? workspaceId = null);
     }
 }
