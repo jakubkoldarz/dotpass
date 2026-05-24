@@ -16,7 +16,6 @@ namespace backend.Middleware
                 _logger.LogWarning(ex.Message);
                 await HandleException(context, ex);
             }
-
         }
 
         public static Task HandleException(HttpContext context, Exception exception)

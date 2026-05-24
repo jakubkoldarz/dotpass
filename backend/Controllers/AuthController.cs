@@ -11,14 +11,14 @@ namespace backend.Controllers
     public class AuthController(IAuthService _authService) : ControllerBase
     {
         [HttpPost("register")]
-        public async Task<IActionResult> Register(RegisterUserRequest request)
+        public async Task<ActionResult<JwtResponse>> Register(RegisterUserRequest request)
         {
             var result = await _authService.RegisterAsync(request);
             return Ok(result);
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login(LoginUserRequest request)
+        public async Task<ActionResult<JwtResponse>> Login(LoginUserRequest request)
         {
             var tokens = await _authService.LoginAsync(request);
 
@@ -34,7 +34,7 @@ namespace backend.Controllers
         }
 
         [HttpPost("refresh")]
-        public async Task<IActionResult> Refresh()
+        public async Task<ActionResult<JwtResponse>> Refresh()
         {
             var refreshToken = Request.Cookies["refreshToken"];
 

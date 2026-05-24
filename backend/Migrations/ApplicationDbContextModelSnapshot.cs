@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
-using backend;
+using backend.Data;
 
 #nullable disable
 
@@ -40,7 +40,7 @@ namespace backend.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
-                    b.Property<Guid>("WorkspaceId")
+                    b.Property<Guid?>("WorkspaceId")
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
@@ -55,45 +55,45 @@ namespace backend.Migrations
 
             modelBuilder.Entity("backend.Models.DeviceGroupAccess", b =>
                 {
-                    b.Property<Guid>("DeviceId")
-                        .HasColumnType("uuid");
-
                     b.Property<Guid>("UserGroupId")
                         .HasColumnType("uuid");
 
-                    b.HasKey("DeviceId", "UserGroupId");
+                    b.Property<Guid>("DeviceId")
+                        .HasColumnType("uuid");
 
-                    b.HasIndex("UserGroupId");
+                    b.HasKey("UserGroupId", "DeviceId");
+
+                    b.HasIndex("DeviceId");
 
                     b.ToTable("DeviceGroupAccesses");
                 });
 
             modelBuilder.Entity("backend.Models.DeviceUserAccess", b =>
                 {
-                    b.Property<Guid>("DeviceId")
-                        .HasColumnType("uuid");
-
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
 
-                    b.HasKey("DeviceId", "UserId");
+                    b.Property<Guid>("DeviceId")
+                        .HasColumnType("uuid");
 
-                    b.HasIndex("UserId");
+                    b.HasKey("UserId", "DeviceId");
+
+                    b.HasIndex("DeviceId");
 
                     b.ToTable("DeviceUserAccesses");
                 });
 
             modelBuilder.Entity("backend.Models.GroupMember", b =>
                 {
-                    b.Property<Guid>("UserGroupId")
-                        .HasColumnType("uuid");
-
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
 
-                    b.HasKey("UserGroupId", "UserId");
+                    b.Property<Guid>("UserGroupId")
+                        .HasColumnType("uuid");
 
-                    b.HasIndex("UserId");
+                    b.HasKey("UserId", "UserGroupId");
+
+                    b.HasIndex("UserGroupId");
 
                     b.ToTable("GroupMembers");
                 });
@@ -113,6 +113,9 @@ namespace backend.Migrations
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
+
+                    b.Property<bool>("IsAdmin")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Lastname")
                         .IsRequired()
@@ -171,24 +174,27 @@ namespace backend.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Name")
+                        .IsUnique();
+
                     b.ToTable("Workspaces");
                 });
 
             modelBuilder.Entity("backend.Models.WorkspaceMember", b =>
                 {
-                    b.Property<Guid>("WorkspaceId")
+                    b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("UserId")
+                    b.Property<Guid>("WorkspaceId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Role")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.HasKey("WorkspaceId", "UserId");
+                    b.HasKey("UserId", "WorkspaceId");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("WorkspaceId");
 
                     b.ToTable("WorkspaceMembers");
                 });
@@ -198,8 +204,7 @@ namespace backend.Migrations
                     b.HasOne("backend.Models.Workspace", "Workspace")
                         .WithMany("Devices")
                         .HasForeignKey("WorkspaceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Workspace");
                 });
@@ -213,7 +218,7 @@ namespace backend.Migrations
                         .IsRequired();
 
                     b.HasOne("backend.Models.UserGroup", "UserGroup")
-                        .WithMany("GroupAccesses")
+                        .WithMany("DeviceAccesses")
                         .HasForeignKey("UserGroupId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -309,7 +314,7 @@ namespace backend.Migrations
 
             modelBuilder.Entity("backend.Models.UserGroup", b =>
                 {
-                    b.Navigation("GroupAccesses");
+                    b.Navigation("DeviceAccesses");
 
                     b.Navigation("GroupMembers");
                 });
