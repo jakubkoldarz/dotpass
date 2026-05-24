@@ -32,15 +32,17 @@ jobs:
   backend-ci:
     needs: changes
     if: ${{ needs.changes.outputs.backend == 'true' }}
-    permissions:
-      contents: write 
-      pull-requests: read
     uses: ./.github/workflows/backend-ci.yml 
     secrets: inherit
 
   frontend-ci:
     needs: changes
     if: ${{ needs.changes.outputs.frontend == 'true' }}
+    
+    permissions:
+      contents: write
+      pull-requests: read
+      
     uses: ./.github/workflows/frontend-ci.yml
     secrets: inherit
 
@@ -51,7 +53,6 @@ jobs:
     steps:
     - name: Weryfikacja końcowa
       run: |
-        # Jeśli którykolwiek z uruchomionych testów zakończył się niepowodzeniem, załam cały potok
         if [[ "${{ needs.backend-ci.result }}" == "failure" || "${{ needs.frontend-ci.result }}" == "failure" ]]; then
           echo "Wykryto błędy w testach. Blokada zapisu do main."
           exit 1
