@@ -1,0 +1,56 @@
+name: CI/CD - Monorepo Gatekeeper
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      backend: ${{ steps:filter.outputs.backend }}
+      frontend: ${{ steps:filter.outputs.frontend }}
+    steps:
+    - name: Checkout kodu
+      uses: actions/checkout@v4
+
+    - name: Sprawdzenie ścieżek zmian
+      id: filter
+      uses: dorny/paths-filter@v3
+      with:
+        filters: |
+          backend:
+            - 'backend/**'
+            - 'docker-compose.yml'
+          frontend:
+            - 'mobile/**'
+
+  backend-ci:
+    needs: changes
+    if: ${{ needs.changes.outputs.backend == 'true' }}
+    uses: ./.github/workflows/backend-ci.yml 
+    secrets: inherit
+
+  frontend-ci:
+    needs: changes
+    if: ${{ needs.changes.outputs.frontend == 'true' }}
+    uses: ./.github/workflows/frontend-ci.yml
+    secrets: inherit
+
+  status-check:
+    needs: [changes, backend-ci, frontend-ci]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+    - name: Weryfikacja końcowa
+      run: |
+        # Jeśli którykolwiek z uruchomionych testów zakończył się niepowodzeniem, załam cały potok
+        if [[ "${{ needs.backend-ci.result }}" == "failure" || "${{ needs.frontend-ci.result }}" == "failure" ]]; then
+          echo "Wykryto błędy w testach. Blokada zapisu do main."
+          exit 1
+        fi
+        echo "Wszystkie uruchomione testy przeszły pomyślnie lub zmiany nie wymagały testów."

@@ -1,16 +1,7 @@
 name: CI/CD - Self-Hosted Backend
 
 on:
-  push:
-    branches: [ "main" ]
-    paths:
-      - 'backend/**'
-      - 'docker-compose.yml'
-  pull_request:
-    branches: [ "main" ]
-      paths:
-      - 'backend/**'
-      - 'docker-compose.yml'
+    workflow_call:
 
 jobs:
   build-and-test:
