@@ -3,7 +3,18 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { colors, radius, spacing, typography } from '../../styles';
 import Icon from '../shared/Icon';
 
-export default function Tile({ iconName, label, sub, color, disabled, onPress }) {
+type IconProps = React.ComponentProps<typeof Icon>;
+
+type TileProps = {
+  iconName: IconProps['name'];
+  label: string;
+  sub: string;
+  color: string;
+  disabled?: boolean;
+  onPress: () => void;
+}
+
+export default function Tile({ iconName, label, sub, color, disabled, onPress }: TileProps) {
   return (
     <TouchableOpacity
       style={[styles.tile, disabled && styles.disabled]}

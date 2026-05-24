@@ -7,11 +7,22 @@ import { fetchDevices, INITIAL_ACCESS_RULES } from '../components/shared/Mockdat
 
 import { getDeviceStatus } from '../utils/deviceStatus';
 
+interface DeviceItem {
+  id: string | number;
+  name: string;
+  macaddress: string;
+}
 
-export default function DevicesScreen({ navigation }) {
-  const [devices, setDevices] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+interface DevicesScreenProps {
+  navigation: {
+    navigate: (screen: string, params?: object) => void
+  }
+}
+
+export default function DevicesScreen({ navigation } : DevicesScreenProps) {
+  const [devices, setDevices] = useState<DeviceItem[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -19,9 +30,16 @@ export default function DevicesScreen({ navigation }) {
     (async () => {
       try {
         const data = await fetchDevices();
-        if (!cancelled) setDevices(data);
+        if (!cancelled) setDevices(data as DeviceItem[]);
       } catch (e) {
-        if (!cancelled) setError(e.message);
+        if (!cancelled) {
+          if (e instanceof Error) {
+            setError(e.message);
+          }
+          else {
+            setError('Nieznany błąd');
+          }
+        } 
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -30,8 +48,8 @@ export default function DevicesScreen({ navigation }) {
     return () => { cancelled = true; };
   }, []);
 
-  const getStatus = (device) => {
-    const rule = INITIAL_ACCESS_RULES[device.id];
+  const getStatus = (device : DeviceItem) => {
+    const rule = INITIAL_ACCESS_RULES[device.id as keyof typeof INITIAL_ACCESS_RULES];
 
     if (!rule) return 'warning';
     if (!device.name) return 'warning';
@@ -77,8 +95,8 @@ export default function DevicesScreen({ navigation }) {
           }
           renderItem={({ item }) => (
             <DeviceRow
-              device={item}
-              status={getDeviceStatus(item)}
+              device={item as any}
+              status={getDeviceStatus(item as any)}
               onPress={() => navigation.navigate('DeviceConfig', { device: item })}
             />
           )}

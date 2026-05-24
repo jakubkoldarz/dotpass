@@ -4,7 +4,19 @@ import { colors, spacing, radius, typography } from '../../styles';
 import Icon from '../shared/Icon';
 import { MOCK_GROUPS, MOCK_GROUP_MEMBERS } from '../shared/Mockdata';
 
-export default function SelectGroupModal({ visible, onClose, onSelect, existingIds }) {
+type GroupItem = {
+  id: string | number;
+  name: string;
+}
+
+type SelectGroupModalProps = {
+  visible?: boolean;
+  onClose: () => void;
+  onSelect: (group: GroupItem) => void;
+  existingIds: (number | string)[];
+}
+
+export default function SelectGroupModal({ visible, onClose, onSelect, existingIds }: SelectGroupModalProps) {
   const [query, setQuery] = useState('');
 
   const filtered = MOCK_GROUPS
@@ -44,7 +56,7 @@ export default function SelectGroupModal({ visible, onClose, onSelect, existingI
             <View style={styles.meta}>
               <Text style={styles.name}>{item.name}</Text>
               <Text style={styles.email}>
-                {(MOCK_GROUP_MEMBERS[item.id] || []).length} członków
+                {(MOCK_GROUP_MEMBERS[item.id as keyof typeof MOCK_GROUP_MEMBERS] || []).length} członków
               </Text>
             </View>
 
