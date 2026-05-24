@@ -25,6 +25,8 @@ namespace backend.Models
         [MaxLength(50)]
         public string Lastname { get; set; } = string.Empty;
 
+        public bool IsAdmin { get; set; }
+
         public string? RefreshToken { get; set; }
         public DateTime? RefreshTokenExpiry { get; set; }
 

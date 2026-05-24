@@ -24,8 +24,12 @@ services:
     image: emqx/emqx:latest
     container_name: emqx-container
     restart: always
+    volumes:
+      - emqx_data:/opt/emqx/data
+      - /etc/letsencrypt:/etc/letsencrypt:ro
     ports:
-      - "1883:1883"   # ESP32
+      - "1883:1883"   # ESP32 for testing
+      - "8883:8883"   # ESP32 SSL
       - "18083:18083" # Dashboard & REST API
     environment:
       - "EMQX_DASHBOARD__DEFAULT_PASSWORD=${MQTT_BROKER_PASSWORD}"
@@ -50,3 +54,4 @@ services:
 
 volumes:
   dotpass_data:
+  emqx_data:

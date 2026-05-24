@@ -23,7 +23,10 @@ namespace backend.Services
 
             var claims = new List<Claim>
             {
-                new(ClaimTypes.NameIdentifier, user.Id.ToString())
+                new(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new("IsAdmin", user.IsAdmin.ToString().ToLower()),
+                new(JwtRegisteredClaimNames.Iss, issuer!),
+                new(JwtRegisteredClaimNames.Aud, audience!),
             };
 
             var tokenDescriptor = new SecurityTokenDescriptor
