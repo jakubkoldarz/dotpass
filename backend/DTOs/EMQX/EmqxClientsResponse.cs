@@ -1,7 +1,9 @@
-﻿namespace backend.DTOs.EMQX
+﻿using System.Text.Json.Serialization;
+
+namespace backend.DTOs.EMQX
 {
     public class EmqxClientsResponse
     {
-        public IEnumerable<EmqxClientResponse> Clients { get; set; } = [];
+        public IEnumerable<EmqxClientResponse> Data { get; set; } = [];
     }
 }

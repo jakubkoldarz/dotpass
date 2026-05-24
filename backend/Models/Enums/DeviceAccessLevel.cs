@@ -3,7 +3,7 @@
     public enum DeviceAccessLevel
     {
         None = 0,
-        ReadBasicInfoOnly = 1,
+        Activate = 1,
         ReadOnly = 2,
         FullAccess = 3,
     }

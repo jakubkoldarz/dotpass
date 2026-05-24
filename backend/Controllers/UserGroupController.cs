@@ -1,5 +1,6 @@
 ﻿using backend.DTOs.UserGroups.Requests;
 using backend.DTOs.UserGroups.Responses;
+using backend.DTOs.Users.Requests;
 using backend.Exceptions;
 using backend.Extension;
 using backend.Models.Enums;
@@ -62,6 +63,26 @@ namespace backend.Controllers
             if (access <= AccessLevel.ReadOnly) throw new ForbiddenException();
 
             await _userGroupService.DeleteAsync(userGroupId);
+            return NoContent();
+        }
+
+        [HttpPost("{userGroupId:guid}/members")]
+        public async Task<ActionResult> AddToGroup(Guid userGroupId, UserIdRequest request)
+        {
+            var access = await _userGroupService.CheckGroupAccessAsync(User, userGroupId);
+            if (access <= AccessLevel.ReadOnly) throw new ForbiddenException();
+
+            await _userGroupService.AddToGroupAsync(request.UserId, userGroupId);
+            return NoContent();
+        }
+
+        [HttpDelete("{userGroupId:guid}/members")]
+        public async Task<ActionResult> RemoveFromGroup(Guid userGroupId, UserIdRequest request)
+        {
+            var access = await _userGroupService.CheckGroupAccessAsync(User, userGroupId);
+            if (access <= AccessLevel.ReadOnly) throw new ForbiddenException();
+
+            await _userGroupService.RemoveFromGroupAsync(request.UserId, userGroupId);
             return NoContent();
         }
     }

@@ -5,7 +5,6 @@ using backend.DTOs.Users.Requests;
 using backend.Exceptions;
 using backend.Extension;
 using backend.Interfaces;
-using backend.Models;
 using backend.Models.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -26,13 +25,22 @@ namespace backend.Controllers
             return Ok(device);
         }
 
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<DeviceResponse>>> GetAll()
+        {
+            if (!User.IsAdmin()) throw new ForbiddenException();
+
+            var devices = await _deviceService.GetAllAsync();
+            return Ok(devices);
+        }
+
         [HttpGet("workspace/{workspaceId}")]
         public async Task<ActionResult<IEnumerable<DeviceResponse>>> GetAll(Guid workspaceId)
         {
             await EnsureAccessAsync(DeviceAccessLevel.ReadOnly, workspaceId: workspaceId);
 
-            var device = await _deviceService.GetAllAsync(workspaceId);
-            return Ok(device);
+            var devices = await _deviceService.GetAllFromWorkspaceAsync(workspaceId);
+            return Ok(devices);
         }
 
         [HttpPut("{deviceId:guid}")]
@@ -99,15 +107,16 @@ namespace backend.Controllers
         }
 
         [HttpGet("my")]
-        public async Task<IActionResult> GetAccessibleDevices()
+        public async Task<ActionResult<IEnumerable<BasicDeviceResponse>>> GetAccessibleDevices()
         {
-            await _deviceService.GetAccessibleDevicesAsync(User.GetUserId());
-            return Ok();
+            var devices = await _deviceService.GetAccessibleDevicesAsync(User.GetUserId());
+            return Ok(devices);
         }
 
-        [HttpPost("{deviceId:guid}/open/{time:int}")]
-        public async Task<IActionResult> ActivateDevice(Guid deviceId, int time)
+        [HttpPost("{deviceId:guid}/activate/{time:int}")]
+        public async Task<IActionResult> ActivateDevice(Guid deviceId, int time = 5000)
         {
+            await _deviceService.ActivateAsync(User.GetUserId(), deviceId, time);
             return Ok();
         }
 

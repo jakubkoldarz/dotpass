@@ -14,6 +14,31 @@ namespace backend.Services
 {
     public class DeviceService(ApplicationDbContext _db, IEmqxService _emqxService) : IDeviceService
     {
+        public async Task ActivateAsync(Guid userId, Guid deviceId, int time)
+        {
+            var deviceInfo = await _db.Devices
+                .Where(d => d.Id == deviceId)
+                .Select(d => new
+                {
+                    MacAdress = d.MacAddress,
+                    IsPublicInWorkspace = (d.IsPublicInWorkspace ?? false)  && d.Workspace!.WorkspaceMembers.Any(wm => wm.UserId == userId),
+                    HasDirectAccess = d.UserAccesses.Any(ua => ua.UserId == userId),
+                    HasGroupAccess = d.GroupAccesses.Any(ga => ga.UserGroup!.GroupMembers.Any(gm => gm.UserId == userId))
+                }).FirstOrDefaultAsync();
+
+            if (deviceInfo == null) throw new NotFoundException();
+
+            var isAdmin = await _db.Users.Where(u => u.Id == userId).Select(u => u.IsAdmin).FirstOrDefaultAsync();
+            var hasAccess = isAdmin || deviceInfo.HasGroupAccess || deviceInfo.HasDirectAccess || deviceInfo.IsPublicInWorkspace;
+
+            if (!hasAccess) throw new ForbiddenException();
+
+            string topic = $"devices/{deviceInfo.MacAdress}/cmd";
+            string payload = $"open {time}";
+
+            await _emqxService.PublishMessageAsync(topic, payload);
+        }
+
         public async Task AddGroupAccessAsync(Guid userGroupId, Guid deviceId)
         {
             var group = await _db.UserGroups.FindAsync(userGroupId);
@@ -68,7 +93,7 @@ namespace backend.Services
             var workspaceExist = await _db.Workspaces.AnyAsync(w => w.Id == workspaceId);
             if (deviceToAssign == null || !workspaceExist) throw new BadRequestException();
 
-            if (deviceToAssign.WorkspaceId != null) 
+            if (deviceToAssign.WorkspaceId != null)
                 throw new BadRequestException("Device is already assigned to another workspace");
 
             deviceToAssign.WorkspaceId = workspaceId;
@@ -77,9 +102,11 @@ namespace backend.Services
 
         public async Task<DeviceAccessLevel> CheckAccessAsync(Guid? userId = null, Guid? workspaceId = null, Guid? deviceId = null)
         {
-            if(userId.HasValue && deviceId.HasValue)
+            WorkspaceRole? role = null;
+
+            if (userId.HasValue && deviceId.HasValue)
             {
-                var role = await _db.Devices
+                role = await _db.Devices
                     .Where(d => d.Id == deviceId && d.WorkspaceId != null)
                     .Select(d => _db.WorkspaceMembers
                         .Where(wm => wm.WorkspaceId == d.WorkspaceId && wm.UserId == userId)
@@ -87,25 +114,18 @@ namespace backend.Services
                         .FirstOrDefault()
                     )
                     .FirstOrDefaultAsync();
-
-                if (role.HasValue && role == WorkspaceRole.Moderator) return DeviceAccessLevel.FullAccess;
-                else if (role.HasValue && role == WorkspaceRole.Member) return DeviceAccessLevel.ReadBasicInfoOnly;
-                else return DeviceAccessLevel.None;
             }
-
-            if(userId.HasValue && workspaceId.HasValue)
+            else if (userId.HasValue && workspaceId.HasValue)
             {
-                var role = await _db.WorkspaceMembers
+                role = await _db.WorkspaceMembers
                     .Where(wm => wm.UserId == userId && wm.WorkspaceId == workspaceId)
-                    .Select(wm => wm.Role)
+                    .Select(wm => (WorkspaceRole?)wm.Role)
                     .FirstOrDefaultAsync();
-
-                if (role == WorkspaceRole.Moderator) return DeviceAccessLevel.FullAccess;
-                else if (role == WorkspaceRole.Member) return DeviceAccessLevel.ReadBasicInfoOnly;
-                else return DeviceAccessLevel.None;
             }
 
-            return DeviceAccessLevel.None;
+            if (role.HasValue && role == WorkspaceRole.Moderator) return DeviceAccessLevel.FullAccess;
+            else if (role.HasValue && role == WorkspaceRole.Member) return DeviceAccessLevel.Activate;
+            else return DeviceAccessLevel.None;
         }
 
         public async Task<IEnumerable<BasicDeviceResponse>> GetAccessibleDevicesAsync(Guid userId)
@@ -113,7 +133,7 @@ namespace backend.Services
             var devices = await _db.Devices
                 .Where(d =>
                     d.UserAccesses.Any(ua => ua.UserId == userId) ||
-                    d.GroupAccesses.Any(ga => ga.UserGroup!.GroupMembers.Any(m => m.UserId == userId)) || 
+                    d.GroupAccesses.Any(ga => ga.UserGroup!.GroupMembers.Any(m => m.UserId == userId)) ||
                     (d.IsPublicInWorkspace == true && _db.WorkspaceMembers.Any(wm => wm.WorkspaceId == d.WorkspaceId && wm.UserId == userId))
                 ).Select(d => new BasicDeviceResponse
                 {
@@ -125,7 +145,24 @@ namespace backend.Services
             return devices;
         }
 
-        public async Task<IEnumerable<DeviceResponse>> GetAllAsync(Guid workspaceId)
+        public async Task<IEnumerable<DeviceResponse>> GetAllAsync()
+        {
+            await SyncBrokerAsync();
+
+            var devices = await _db.Devices
+                .Select(d => new DeviceResponse
+                {
+                    Id = d.Id,
+                    IsPublicInWorkspace = d.IsPublicInWorkspace ?? false,
+                    Name = d.Name,
+                    MacAddress = d.MacAddress,
+                    WorkspaceId = d.WorkspaceId
+                }).ToListAsync();
+
+            return devices;
+        }
+
+        public async Task<IEnumerable<DeviceResponse>> GetAllFromWorkspaceAsync(Guid workspaceId)
         {
             await SyncBrokerAsync();
 
@@ -215,7 +252,7 @@ namespace backend.Services
             var userAccess = await _db.DeviceUserAccesses
                 .FirstOrDefaultAsync(dua => dua.DeviceId == deviceId && dua.UserId == userId);
 
-            if(userAccess == null) throw new BadRequestException("Provided user does not have access to this device");
+            if (userAccess == null) throw new BadRequestException("Provided user does not have access to this device");
 
             _db.DeviceUserAccesses.Remove(userAccess);
             await _db.SaveChangesAsync();
@@ -260,7 +297,7 @@ namespace backend.Services
             deviceToUpdate.IsPublicInWorkspace = request.IsPublicInWorkspace;
             await _db.SaveChangesAsync();
 
-            return new DeviceResponse 
+            return new DeviceResponse
             {
                 Id = deviceId,
                 IsPublicInWorkspace = deviceToUpdate.IsPublicInWorkspace ?? false,

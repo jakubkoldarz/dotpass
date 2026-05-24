@@ -7,7 +7,8 @@ namespace backend.Interfaces
     public interface IDeviceService
     {
         Task<DeviceDetailsResponse> GetSingleAsync(Guid deviceId);
-        Task<IEnumerable<DeviceResponse>> GetAllAsync(Guid workspaceId);
+        Task<IEnumerable<DeviceResponse>> GetAllAsync();
+        Task<IEnumerable<DeviceResponse>> GetAllFromWorkspaceAsync(Guid workspaceId);
         Task<DeviceResponse> UpdateAsync(Guid deviceId, UpdateDeviceRequest request);
         Task AssingAsync(Guid deviceId, Guid workspaceId);
         Task RemoveAsync(Guid deviceId);
@@ -18,5 +19,6 @@ namespace backend.Interfaces
         Task SyncBrokerAsync();
         Task<IEnumerable<BasicDeviceResponse>> GetAccessibleDevicesAsync(Guid userId);
         Task<DeviceAccessLevel> CheckAccessAsync(Guid? userId = null, Guid? workspaceId = null, Guid? deviceId = null);
+        Task ActivateAsync(Guid userId, Guid deviceId, int time);
     }
 }
