@@ -4,7 +4,22 @@ import { colors, spacing, radius, typography } from '../../styles';
 import Icon from '../shared/Icon';
 import { MOCK_USERS } from '../shared/Mockdata';
 
-export default function SelectUserModal({ visible, onClose, onSelect, existingIds }) {
+type UserObject = {
+  id: number;
+  name: string;
+  email: string;
+  password: string;
+  isAdmin: boolean;
+}
+
+type SelectUserModalProps = {
+  visible?: boolean;
+  onClose: () => void;
+  onSelect: (user: UserObject) => void;
+  existingIds: number[];
+}
+
+export default function SelectUserModal({ visible, onClose, onSelect, existingIds } : SelectUserModalProps) {
   const [query, setQuery] = useState('');
 
   const filtered = MOCK_USERS

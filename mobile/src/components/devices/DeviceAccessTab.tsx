@@ -5,6 +5,28 @@ import { colors, spacing, typography } from '../../styles';
 import AccessRow from './AccessRow';
 import Button from '../ui/Button';
 
+type UserObject = {
+  id: string;
+  name: string;
+  email: string;
+}
+
+type GroupObject = {
+  id: string;
+  name: string;
+  members?: string[];
+}
+
+type DeviceAccessTabProps = {
+  device: any;
+  users: UserObject[];
+  groups: GroupObject[];
+  onAddUser: () => void;
+  onAddGroup: () => void;
+  onRemoveUser: (id: string) => void;
+  onRemoveGroup: (id: string) => void;
+}
+
 export default function DeviceAccessTab({
   device,
   users = [], 
@@ -13,7 +35,7 @@ export default function DeviceAccessTab({
   onAddGroup,
   onRemoveUser,
   onRemoveGroup,
-}) {
+}: DeviceAccessTabProps) {
     
   return (
     <View style={styles.container}>

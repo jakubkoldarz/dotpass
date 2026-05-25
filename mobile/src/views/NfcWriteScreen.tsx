@@ -2,7 +2,18 @@ import React, { useEffect, useRef } from 'react';
 import { View, Text, Alert, StyleSheet, ActivityIndicator } from 'react-native';
 import NfcManager, { Ndef, NfcTech } from 'react-native-nfc-manager';
 
-export default function NfcWriteScreen({ route, navigation }) {
+interface NfcWriteScreenProps {
+  route: {
+    params: {
+      deviceId: string | number;
+    };
+  };
+  navigation: {
+    goBack: () => void;
+  };
+}
+
+export default function NfcWriteScreen({ route, navigation } : NfcWriteScreenProps) {
   const { deviceId } = route.params;
   const isWritingRef = useRef(false);
 
