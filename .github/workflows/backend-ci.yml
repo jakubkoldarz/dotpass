@@ -38,7 +38,7 @@ jobs:
         echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
         echo "EMQX_API_URL=${{ secrets.EMQX_API_URL }}" >> .env
         echo "EMQX_API_KEY=${{ secrets.EMQX_API_KEY }}" >> .env
-        echo "EMQX_SECRET_KEY=${{ secrets.EMQX_SECRET_KEY }}" >> .env
+        echo "EMQX_API_SECRET=${{ secrets.EMQX_SECRET_KEY }}" >> .env
 
     - name: Deploy with Docker Compose
       run: |
