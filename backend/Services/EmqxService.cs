@@ -13,7 +13,7 @@ namespace backend.Services
     {
         private readonly string? baseUrl = _config["EMQX_API_URL"];
         private readonly string? apiKey = _config["EMQX_API_KEY"];
-        private readonly string? secretKey = _config["EMQX_SECRET_KEY"];
+        private readonly string? secretKey = _config["EMQX_API_SECRET"];
 
         public async Task<IEnumerable<EmqxClientResponse>> GetDevicesAsync()
         {
