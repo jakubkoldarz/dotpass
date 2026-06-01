@@ -68,7 +68,7 @@ namespace backend.Services
 
             return new TokensResponse(jwtToken, newRefreshToken);
         }
-        public async Task<JwtResponse> RegisterAsync(RegisterUserRequest request)
+        public async Task<TokensResponse> RegisterAsync(RegisterUserRequest request)
         {
             var userExists = await _db.Users.AnyAsync(u => u.Email == request.Email);
 
@@ -78,13 +78,15 @@ namespace backend.Services
 
             var isFirstUser = !await _db.Users.AnyAsync();
 
+            var refreshToken = _tokenService.CreateRefreshToken();
+
             var user = new User
             {
                 Firstname = request.Firstname,
                 Lastname = request.Lastname,
                 Email = request.Email,
                 PasswordHash = passwordHash,
-                RefreshToken = _tokenService.CreateRefreshToken(),
+                RefreshToken = refreshToken,
                 RefreshTokenExpiry = DateTime.UtcNow.AddDays(7),
                 IsAdmin = isFirstUser
             };
@@ -92,9 +94,9 @@ namespace backend.Services
             _db.Users.Add(user);
             await _db.SaveChangesAsync();
 
-            var token = _tokenService.CreateAccessToken(user);
+            var jwtToken = _tokenService.CreateAccessToken(user);
 
-            return new JwtResponse(token);
+            return new TokensResponse(jwtToken, refreshToken);
         }
 
         public async Task<UserDetailsResponse> UserDetailsAsync(Guid userId)
@@ -106,6 +108,7 @@ namespace backend.Services
                     Email = u.Email,
                     Firstname = u.Firstname,
                     Lastname = u.Lastname,
+                    IsAdmin = u.IsAdmin,
                     UserGroups = u.GroupMemberships.Select(gm => new UserGroupResponse
                     {
                         Id = gm.UserGroupId,
@@ -118,10 +121,11 @@ namespace backend.Services
                         IsPublicInWorkspace = da.Device!.IsPublicInWorkspace ?? false,
                         Name = da.Device.Name
                     }),
-                    Workspaces = u.WorkspaceMemberships.Select(wm => new WorkspaceResponse
+                    Workspaces = u.WorkspaceMemberships.Select(wm => new WorkspaceMemberResponse
                     {
                         Id = wm.WorkspaceId,
-                        Name = wm.Workspace!.Name
+                        Name = wm.Workspace!.Name,
+                        Role = wm.Role
                     })
                 })
                 .FirstOrDefaultAsync();

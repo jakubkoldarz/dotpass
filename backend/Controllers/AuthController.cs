@@ -15,8 +15,17 @@ namespace backend.Controllers
         [HttpPost("register")]
         public async Task<ActionResult<JwtResponse>> Register(RegisterUserRequest request)
         {
-            var result = await _authService.RegisterAsync(request);
-            return Ok(result);
+            var tokens = await _authService.RegisterAsync(request);
+
+            Response.Cookies.Append("refreshToken", tokens.RefreshToken, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Strict,
+                Expires = DateTime.UtcNow.AddDays(7)
+            });
+
+            return Ok(tokens.JwtToken);
         }
 
         [HttpPost("login")]
@@ -73,7 +82,7 @@ namespace backend.Controllers
         }
 
         [Authorize]
-        [HttpPost("me")]
+        [HttpGet("me")]
         public async Task<ActionResult<UserDetailsResponse>> Me()
         {
             var user = await _authService.UserDetailsAsync(User.GetUserId());
