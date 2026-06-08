@@ -9,7 +9,7 @@ type SelectUserModalProps = {
   onClose: () => void;
   onSelect: (user: workspaceMember) => void;
   existingIds: string[];
-  workspaceId: string; // Dodajemy to, aby wiedzieć, skąd pobrać ludzi
+  workspaceId: string;
 }
 
 export default function SelectUserModal({ visible, onClose, onSelect, existingIds, workspaceId } : SelectUserModalProps) {

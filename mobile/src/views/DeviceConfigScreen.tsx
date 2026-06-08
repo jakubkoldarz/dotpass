@@ -36,7 +36,6 @@ export default function DeviceConfigScreen({ route, navigation }: Props) {
   const [userModal, setUserModal] = useState(false);
   const [groupModal, setGroupModal] = useState(false);
 
-  // Pobieranie szczegółów urządzenia z backendu
   const fetchDeviceData = async () => {
     try {
       setLoading(true);
@@ -54,14 +53,12 @@ export default function DeviceConfigScreen({ route, navigation }: Props) {
     fetchDeviceData();
   }, [deviceId]);
 
-  // --- AKCJE Z ZAKŁADKI INFO ---
-
   const handleRename = async (newName: string) => {
     if (!device) return;
     try {
       await updateDevice(deviceId, { name: newName, isPublicInWorkspace: device.isPublicInWorkspace || false });
       toast.success('Zmieniono nazwę urządzenia');
-      fetchDeviceData(); // Odśwież widok
+      fetchDeviceData();
     } catch (e: any) {
       toast.error('Nie udało się zmienić nazwy');
     }
@@ -69,14 +66,14 @@ export default function DeviceConfigScreen({ route, navigation }: Props) {
 
   const handleTestDoor = async () => {
     try {
-      await openDoor(deviceId, 5); // Otwiera drzwi na 5 sekund
+      await openDoor(deviceId, 5); 
       toast.success('Wysłano sygnał otwarcia drzwi!');
     } catch (e: any) {
       toast.error('Błąd otwierania drzwi');
     }
   };
 
-  // --- AKCJE Z ZAKŁADKI DOSTĘP ---
+
 
   const handleRemoveUser = async (userId: string) => {
     try {
@@ -107,7 +104,7 @@ export default function DeviceConfigScreen({ route, navigation }: Props) {
     );
   }
 
-  // Formatowanie danych pod komponenty UI
+
   const mappedUsers = (device.userAccesses || []).map(u => ({
     id: u.id,
     name: `${u.firstname} ${u.lastname}`,
@@ -117,15 +114,14 @@ export default function DeviceConfigScreen({ route, navigation }: Props) {
   const mappedGroups = (device.groupAccesses || []).map(g => ({
     id: g.id,
     name: g.name,
-    members: [] // Backend tu nie zwraca liczby członków (i dobrze, mniejszy payload)
+    members: []
   }));
 
-  // Status: jeśli urządzenie nie ma nazwy, jest żółty (warning). Inaczej 'ok'.
   const deviceStatus = device.name ? 'ok' : 'warning';
 
   return (
     <View style={layout.screenRoot}>
-      {/* Górny pasek */}
+
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Icon name="ArrowLeft" size={24} color={colors.white} />
@@ -134,7 +130,7 @@ export default function DeviceConfigScreen({ route, navigation }: Props) {
         <View style={{ width: 28 }} /> 
       </View>
 
-      {/* Segmenty */}
+
       <View style={styles.segmentContainer}>
         <TouchableOpacity style={[styles.segment, tab === 'info' && styles.segmentActive]} onPress={() => setTab('info')}>
           <Text style={[styles.segmentText, tab === 'info' && styles.segmentTextActive]}>Informacje</Text>
@@ -147,7 +143,7 @@ export default function DeviceConfigScreen({ route, navigation }: Props) {
         </TouchableOpacity>
       </View>
 
-      {/* Zawartość zakładek */}
+
       <ScrollView contentContainerStyle={styles.content}>
         {tab === 'info' && (
           <DeviceInfoTab
@@ -175,17 +171,17 @@ export default function DeviceConfigScreen({ route, navigation }: Props) {
               onRemoveGroup={handleRemoveGroup}
             />
 
-            {/* Te modale za chwilę też podepniemy pod API */}
+
             <SelectUserModal
   visible={userModal}
   onClose={() => setUserModal(false)}
   existingIds={mappedUsers.map(u => u.id) as string[]}
-  workspaceId={workspaceId} // PRZEKAZANIE ID
+  workspaceId={workspaceId} 
   onSelect={async (user) => { 
     try {
       await accessGrantDevice(deviceId, user.id);
       toast.success('Przyznano dostęp użytkownikowi!');
-      fetchDeviceData(); // Odświeża główny widok płytki
+      fetchDeviceData();
     } catch (e: any) {
       toast.error('Błąd podczas przyznawania dostępu');
     }
@@ -196,12 +192,12 @@ export default function DeviceConfigScreen({ route, navigation }: Props) {
   visible={groupModal}
   onClose={() => setGroupModal(false)}
   existingIds={mappedGroups.map(g => g.id) as string[]}
-  workspaceId={workspaceId} // PRZEKAZANIE ID
+  workspaceId={workspaceId} 
   onSelect={async (group) => { 
     try {
       await accessGrantDeviceGroup(deviceId, group.id);
       toast.success('Przyznano dostęp grupie!');
-      fetchDeviceData(); // Odświeża główny widok płytki
+      fetchDeviceData(); 
     } catch (e: any) {
       toast.error('Błąd podczas przyznawania dostępu grupie');
     }

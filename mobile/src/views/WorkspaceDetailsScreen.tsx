@@ -12,7 +12,6 @@ export default function WorkspaceDetailsScreen({ route, navigation }: Props) {
   const { workspaceId, workspaceName } = route.params;
   const { user } = useAuthStore();
 
-  // Sprawdzamy z globalnego usera uprawnienia do tego konkretnego workspace'u
   const isModeratorHere = (user?.userGroups || []).some(g => g.workspaceId === workspaceId);
   const isAdmin = user?.isAdmin;
   const canManage = isAdmin || isModeratorHere;

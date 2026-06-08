@@ -20,7 +20,7 @@ export default function AdminWorkspacesScreen({ navigation }: Props) {
 
   const fetchWorkspaces = async () => {
     try {
-      const data = await getWorkspaces(); // Twoja funkcja z API
+      const data = await getWorkspaces();
       setWorkspaces(data);
     } catch (error) {
       Alert.alert('Błąd', 'Nie udało się pobrać przestrzeni.');
@@ -35,7 +35,7 @@ export default function AdminWorkspacesScreen({ navigation }: Props) {
   const handleCreateWorkspace = async () => {
     if (!newWsName.trim()) return;
     try {
-      await createWorkspace(newWsName); // Twoja funkcja z API
+      await createWorkspace(newWsName); 
       setNewWsName('');
       setModalVisible(false);
       fetchWorkspaces();
@@ -89,7 +89,6 @@ export default function AdminWorkspacesScreen({ navigation }: Props) {
         />
       )}
 
-      {/* Prosty Modal do tworzenia */}
       <Modal visible={modalVisible} transparent animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>

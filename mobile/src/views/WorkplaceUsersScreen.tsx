@@ -39,7 +39,7 @@ export default function WorkspaceUsersScreen({ route, navigation }: Props) {
           try {
             await deleteWorkspaceMember(workspaceId, userId);
             toast.success('Użytkownik został usunięty');
-            fetchMembers(); // Odświeżamy listę
+            fetchMembers();
           } catch (e: any) {
             toast.error('Błąd usuwania użytkownika');
           }

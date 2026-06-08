@@ -5,7 +5,7 @@ import { RootStackParamList } from '../../App';
 import { colors, layout, spacing, typography } from '../styles';
 import DeviceRow from '../components/devices/DeviceRow';
 import Icon from '../components/shared/Icon';
-import { getWorkspaceDevices, deviceInfoShort } from '../api/deviceApi'; // ZMiana na Twoje API
+import { getWorkspaceDevices, deviceInfoShort } from '../api/deviceApi'; 
 import { useToast } from '../hooks/useToast';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Devices'>;
@@ -21,7 +21,6 @@ export default function DevicesScreen({ route, navigation } : Props) {
     try {
       setLoading(true);
       setError(null);
-      // Pobieramy urządzenia tylko dla tego workspace'u
       const data = await getWorkspaceDevices(workspaceId);
       setDevices(data);
     } catch (e: any) {
@@ -37,7 +36,7 @@ export default function DevicesScreen({ route, navigation } : Props) {
     fetchDevices();
   }, [workspaceId]);
 
-  // Uproszczony status - skoro są w workspace, zakładamy 'ok', chyba że nie mają nazwy
+
   const getStatus = (device: deviceInfoShort) => {
     if (!device.name) return 'warning';
     return 'ok';
@@ -85,9 +84,9 @@ export default function DevicesScreen({ route, navigation } : Props) {
           }
           renderItem={({ item }) => (
             <DeviceRow
-              device={{...item, macaddress: item.macAddress || 'Brak MAC'}} // Mapowanie macAddress
+              device={{...item, macaddress: item.macAddress || 'Brak MAC'}} 
               status={getStatus(item)}
-              onPress={() => navigation.navigate('DeviceConfig', {deviceId: item.id, workspaceId})} // Przekażemy tu ID urządzenia w kolejnym kroku
+              onPress={() => navigation.navigate('DeviceConfig', {deviceId: item.id, workspaceId})} 
             />
           )}
         />

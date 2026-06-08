@@ -1,13 +1,9 @@
-/**
- * @format
- */
-
-import React from 'react';
-import ReactTestRenderer from 'react-test-renderer';
+// __tests__/App.test.tsx
+import { render } from '@testing-library/react-native';
 import App from '../App';
 
-test('renders correctly', async () => {
-  await ReactTestRenderer.act(() => {
-    ReactTestRenderer.create(<App />);
-  });
+it('renders correctly', async () => {
+  const { findByTestId } = render(<App />);
+  
+  // await findByTestId('root-view');
 });
