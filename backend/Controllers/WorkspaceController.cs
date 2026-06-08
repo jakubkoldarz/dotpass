@@ -19,8 +19,15 @@ namespace backend.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<WorkspaceResponse>>> GetAll()
         {
-            if(!User.IsAdmin()) throw new ForbiddenException();
-            var workspaces = await _workspaceService.GetAllAsync();
+            IEnumerable<WorkspaceResponse> workspaces;
+            if(User.IsAdmin())
+            {
+                workspaces = await _workspaceService.GetAllAsync();
+            }
+            else
+            {
+                workspaces = await _workspaceService.GetUserWorkspacesAsync(User.GetUserId());
+            }
             return Ok(workspaces);
         }
 
@@ -32,6 +39,13 @@ namespace backend.Controllers
 
             var workspace = await _workspaceService.GetSingleAsync(workspaceId);
             return Ok(workspace);
+        }
+
+        [HttpPost("join/{code}")]
+        public async Task<IActionResult> JoinWorkspace(string code)
+        {
+            await _workspaceService.JoinAsync(User.GetUserId(), code);
+            return Ok();
         }
 
         [HttpPost]
@@ -87,6 +101,8 @@ namespace backend.Controllers
             await _workspaceService.UpdateWorkspaceRoleAsync(workspaceId, request);
             return Ok();
         }
+
+
 
         [HttpDelete("{workspaceId:guid}/members")]
         public async Task<IActionResult> RemoveFromWorkspace(Guid workspaceId, RemoveFromWorkspaceRequest request)
