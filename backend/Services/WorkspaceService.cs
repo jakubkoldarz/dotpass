@@ -58,6 +58,17 @@ namespace backend.Services
             }
 
             var workspace = new Workspace { Name = request.Name };
+
+            const string chars = "ABCDEFGHIJKLMNPQRSTUVWXYZ123456789";
+
+            var randomArray = new char[6];
+            for (int i = 0; i < 6; i++)
+            {
+                randomArray[i] = chars[Random.Shared.Next(chars.Length)];
+            }
+
+            workspace.Code = new string(randomArray);
+
             _db.Workspaces.Add(workspace);
             await _db.SaveChangesAsync();
 
@@ -84,6 +95,7 @@ namespace backend.Services
                 {
                     Id = w.Id,
                     Name = w.Name,
+                    Code = w.Code,
 
                     Devices = w.Devices.Select(d => new BasicDeviceResponse
                     {
@@ -112,6 +124,20 @@ namespace backend.Services
 
             return workspace;
         }
+
+        public async Task<IEnumerable<WorkspaceResponse>> GetUserWorkspacesAsync(Guid userId)
+        {
+            var workspaces = await _db.WorkspaceMembers
+                .Where(wm => wm.UserId == userId)
+                .Select(wm => new WorkspaceResponse
+                {
+                    Id = wm.WorkspaceId,
+                    Name = wm.Workspace!.Name
+                })
+                .ToListAsync();
+            return workspaces;
+        }
+
         public async Task<IEnumerable<UserResponse>> GetWorkspaceMembersAsync(Guid workspaceId)
         {
             var members = await _db.WorkspaceMembers
@@ -126,6 +152,17 @@ namespace backend.Services
 
             return members;
         }
+
+        public async Task JoinAsync(Guid userId, string workspaceCode)
+        {
+            var workspaceToJoin = await _db.Workspaces.FirstOrDefaultAsync(w => w.Code == workspaceCode);
+            
+            if(workspaceToJoin == null) throw new NotFoundException();
+
+            var req = new AddToWorkspaceRequest { Role = WorkspaceRole.Member, UserId = userId };
+            await AddToWorkspaceAsync(workspaceToJoin.Id, req);
+        }
+
         public async Task RemoveFromWorkspaceAsync(Guid workspaceId, RemoveFromWorkspaceRequest request)
         {
             var membershipToDelete = await _db.WorkspaceMembers
