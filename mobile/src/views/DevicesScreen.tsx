@@ -1,67 +1,54 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, ActivityIndicator, StyleSheet } from 'react-native';
-
+import { View, Text, FlatList, ActivityIndicator, StyleSheet, TouchableOpacity } from 'react-native';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../../App';
 import { colors, layout, spacing, typography } from '../styles';
 import DeviceRow from '../components/devices/DeviceRow';
-import { fetchDevices, INITIAL_ACCESS_RULES } from '../components/shared/Mockdata';
+import Icon from '../components/shared/Icon';
+import { getWorkspaceDevices, deviceInfoShort } from '../api/deviceApi'; 
+import { useToast } from '../hooks/useToast';
 
-import { getDeviceStatus } from '../utils/deviceStatus';
+type Props = NativeStackScreenProps<RootStackParamList, 'Devices'>;
 
-interface DeviceItem {
-  id: string | number;
-  name: string;
-  macaddress: string;
-}
-
-interface DevicesScreenProps {
-  navigation: {
-    navigate: (screen: string, params?: object) => void
-  }
-}
-
-export default function DevicesScreen({ navigation } : DevicesScreenProps) {
-  const [devices, setDevices] = useState<DeviceItem[]>([]);
+export default function DevicesScreen({ route, navigation } : Props) {
+  const { workspaceId } = route.params;
+  const [devices, setDevices] = useState<deviceInfoShort[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const toast = useToast();
+
+  const fetchDevices = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await getWorkspaceDevices(workspaceId);
+      setDevices(data);
+    } catch (e: any) {
+      const msg = e.response?.data?.message || 'Nie udało się pobrać listy urządzeń';
+      setError(msg);
+      toast.error(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    let cancelled = false;
+    fetchDevices();
+  }, [workspaceId]);
 
-    (async () => {
-      try {
-        const data = await fetchDevices();
-        if (!cancelled) setDevices(data as DeviceItem[]);
-      } catch (e) {
-        if (!cancelled) {
-          if (e instanceof Error) {
-            setError(e.message);
-          }
-          else {
-            setError('Nieznany błąd');
-          }
-        } 
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
 
-    return () => { cancelled = true; };
-  }, []);
-
-  const getStatus = (device : DeviceItem) => {
-    const rule = INITIAL_ACCESS_RULES[device.id as keyof typeof INITIAL_ACCESS_RULES];
-
-    if (!rule) return 'warning';
+  const getStatus = (device: deviceInfoShort) => {
     if (!device.name) return 'warning';
-    if (rule.userIds.length === 0 && rule.groupIds.length === 0) return 'warning';
-
     return 'ok';
   };
 
   return (
     <View style={layout.screenRoot}>
       <View style={styles.header}>
-        <Text style={styles.title}>Płytki</Text>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 4, marginRight: 12 }}>
+          <Icon name="ArrowLeft" size={24} color={colors.white} />
+        </TouchableOpacity>
+        <Text style={styles.title}>Urządzenia (Płytki)</Text>
         {!loading && (
           <View style={styles.countBadge}>
             <Text style={styles.countText}>{devices.length}</Text>
@@ -88,16 +75,18 @@ export default function DevicesScreen({ navigation } : DevicesScreenProps) {
           keyExtractor={(item) => String(item.id)}
           contentContainerStyle={styles.list}
           ItemSeparatorComponent={() => <View style={{ height: spacing.md }} />}
+          refreshing={loading}
+          onRefresh={fetchDevices}
           ListEmptyComponent={
             <View style={styles.center}>
-              <Text style={styles.emptyText}>Brak zarejestrowanych urządzeń.</Text>
+              <Text style={styles.emptyText}>Brak zarejestrowanych urządzeń w tej przestrzeni.</Text>
             </View>
           }
           renderItem={({ item }) => (
             <DeviceRow
-              device={item as any}
-              status={getDeviceStatus(item as any)}
-              onPress={() => navigation.navigate('DeviceConfig', { device: item })}
+              device={{...item, macaddress: item.macAddress || 'Brak MAC'}} 
+              status={getStatus(item)}
+              onPress={() => navigation.navigate('DeviceConfig', {deviceId: item.id, workspaceId})} 
             />
           )}
         />
@@ -107,47 +96,14 @@ export default function DevicesScreen({ navigation } : DevicesScreenProps) {
 }
 
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.borderSoft,
-  },
-  title: {
-    ...typography.screenTitle,
-    flex: 1,
-    fontSize: 20,
-  },
-  countBadge: {
-    backgroundColor: colors.accentFill,
-    borderWidth: 1,
-    borderColor: colors.accentRing,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-  },
+  header: { flexDirection: 'row', alignItems: 'center', padding: spacing.lg, borderBottomWidth: 1, borderBottomColor: colors.borderSoft, paddingTop: 50 },
+  title: { ...typography.screenTitle, flex: 1, fontSize: 20 },
+  countBadge: { backgroundColor: colors.accentFill, borderWidth: 1, borderColor: colors.accentRing, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
   countText: { fontSize: 12, fontWeight: '700', color: colors.accent },
-
   list: { padding: spacing.lg },
-
-  center: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingTop: 80,
-    gap: spacing.md,
-  },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingTop: 80, gap: spacing.md },
   loadingText: { fontSize: 14, color: colors.dim },
   emptyText: { fontSize: 14, color: colors.dim },
-
-  errorBox: {
-    backgroundColor: colors.errorBg,
-    borderRadius: 8,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: colors.error,
-    margin: spacing.lg,
-  },
+  errorBox: { backgroundColor: colors.errorBg, borderRadius: 8, padding: 12, borderWidth: 1, borderColor: colors.error, margin: spacing.lg },
   errorText: { fontSize: 13, color: colors.error },
 });

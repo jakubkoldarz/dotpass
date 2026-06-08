@@ -6,30 +6,33 @@ import {
   Platform,
   ScrollView,
   TouchableOpacity,
-  StyleSheet
+  StyleSheet,
+  ActivityIndicator,
+  Alert
 } from 'react-native';
 
 import { colors, layout, spacing, typography } from '../styles';
 import Input from '../components/ui/Input';
 import Button from '../components/ui/Button';
 import PasswordToggle from '../components/ui/PasswordToggle';
+import ServerSelector from '../components/ui/ServerSelector';
+import { useAuthStore } from '../stores/authStore';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../../App';
 
-interface RegisterScreenProps {
-  navigation: {
-    navigate: (screen: string) => void;
-    goBack: () => void;
-  };
-}
+type Props = NativeStackScreenProps<RootStackParamList, 'Register'>;
 
 interface ValidationErrors {
-  name?: string;
+  firstname?: string;
+  lastname?: string;
   email?: string;
   password?: string;
   confirm?: string;
 }
 
-export default function RegisterScreen({ navigation } : RegisterScreenProps) {
-  const [name, setName] = useState('');
+export default function RegisterScreen({ navigation } : Props) {
+  const [firstname, setFirstName] = useState('');
+  const [lastname, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -39,10 +42,13 @@ export default function RegisterScreen({ navigation } : RegisterScreenProps) {
 
   const [errors, setErrors] = useState<ValidationErrors>({});
 
+  const { register, isLoading, error: backendError, clearError } = useAuthStore();
+
   const validate = () => {
     const newErrors: ValidationErrors = {};
 
-    if (!name.trim()) newErrors.name = 'Imię jest wymagane';
+    if (!firstname.trim()) newErrors.firstname = 'Imię jest wymagane';
+    if (!lastname.trim()) newErrors.lastname = 'Nazwisko jest wymagane';
     if (!email.includes('@')) newErrors.email = 'Podaj poprawny e-mail';
     if (password.length < 6) newErrors.password = 'Hasło min. 6 znaków';
     if (password !== confirmPassword) newErrors.confirm = 'Hasła nie są zgodne';
@@ -51,11 +57,24 @@ export default function RegisterScreen({ navigation } : RegisterScreenProps) {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
     if (!validate()) return;
 
-    console.log({ name, email, password });
-    navigation.navigate('Login');
+    const success = await register({
+      firstname,
+      lastname,
+      email,
+      password
+    })
+
+    if (success) {
+      clearError();
+      navigation.reset({
+        index: 0,
+        routes: [{name: 'Home'}]
+      });
+    }
+    return;
   };
 
   return (
@@ -84,17 +103,30 @@ export default function RegisterScreen({ navigation } : RegisterScreenProps) {
           <Text style={styles.subtitle}>Wypełnij poniższe pola</Text>
         </View>
 
+        <ServerSelector />
+
         {/* Formularz */}
         <View style={styles.form}>
           <Input
-            label="Imię i nazwisko"
-            value={name}
+            label="Imię"
+            value={firstname}
             onChangeText={(t) => {
-              setName(t);
+              setFirstName(t);
               setErrors((e) => ({ ...e, name: undefined }));
             }}
-            placeholder="Jan Kowalski"
-            error={errors.name}
+            placeholder="Jan"
+            error={errors.firstname}
+          />
+
+          <Input
+            label="Nazwisko"
+            value={lastname}
+            onChangeText={(t) => {
+              setLastName(t);
+              setErrors((e) => ({ ...e, name: undefined }));
+            }}
+            placeholder="Kowalski"
+            error={errors.lastname}
           />
 
           <Input
@@ -152,8 +184,15 @@ export default function RegisterScreen({ navigation } : RegisterScreenProps) {
               />
             </View>
           </View>
+          
+          {/* Błąd z serwera backendowego */}
+          {backendError && (
+            <View style={styles.errorBox}>
+              <Text style={styles.errorText}>{backendError}</Text>
+            </View>
+          )}
 
-          <Button title="Zarejestruj się" onPress={handleRegister} />
+          <Button title="Zarejestruj się" onPress={handleRegister} disabled={isLoading} loading={isLoading}/>
 
           <TouchableOpacity
             style={styles.linkRow}
@@ -186,6 +225,8 @@ const styles = StyleSheet.create({
     left: 0,
     top: 0,
     padding: 4,
+    width: 20,
+    height: 20,
   },
   backIcon: {
     fontSize: 22,
@@ -233,4 +274,6 @@ const styles = StyleSheet.create({
     color: colors.accent,
     fontWeight: '600',
   },
+  errorBox: { backgroundColor: 'rgba(255, 82, 82, 0.1)', borderRadius: 8, padding: 12, borderWidth: 1, borderColor: colors.error },
+  errorText: { fontSize: 13, color: colors.error, textAlign: 'center' },
 });

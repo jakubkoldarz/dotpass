@@ -13,28 +13,35 @@ import { colors, layout, spacing, typography } from '../styles';
 import Input from '../components/ui/Input';
 import Button from '../components/ui/Button';
 import PasswordToggle from '../components/ui/PasswordToggle';
-import { mockLogin } from '../components/shared/Mockdata';
+import ServerSelector from '../components/ui/ServerSelector';
+import { useAuthStore } from '../stores/authStore';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../../App';
 
-interface LoginScreenProps {
-  navigation: {
-    navigate: (screen: string, params?: object) => void;
-  };
-}
+type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
 
-export default function LoginScreen({ navigation } : LoginScreenProps) {
+export default function LoginScreen({ navigation } : Props) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [passwordVisible, setPasswordVisible] = useState(false);
-  const [error, setError] = useState('');
+ 
+  const { login, isLoading, error: backendError, clearError} = useAuthStore();
 
-  const handleLogin = () => {
-    setError('');
-    const user = mockLogin(email, password);
-    if (!user) {
-      setError('Nieprawidłowy e-mail lub hasło.');
+  const handleLogin = async () => {
+    if (!email.trim() || !password.trim()) {
+      useAuthStore.getState().setAuthError('Wprowadź adres e-mail i hasło.')
       return;
     }
-    navigation.navigate('Home', { user });
+
+    const sucess = await login({email, password});
+
+    if (sucess) {
+      clearError();
+      navigation.reset({
+        index:0,
+        routes: [{name: 'Home'}]
+      })
+    }
   };
 
   return (
@@ -46,6 +53,7 @@ export default function LoginScreen({ navigation } : LoginScreenProps) {
         contentContainerStyle={styles.container}
         keyboardShouldPersistTaps="handled"
       >
+        
         {/* Logo / nagłówek */}
         <View style={styles.header}>
           <View style={styles.logoBox}>
@@ -55,6 +63,8 @@ export default function LoginScreen({ navigation } : LoginScreenProps) {
           <Text style={styles.subtitle}>Witaj ponownie</Text>
         </View>
 
+        <ServerSelector />
+
         {/* Formularz */}
         <View style={styles.form}>
           <Input
@@ -62,10 +72,11 @@ export default function LoginScreen({ navigation } : LoginScreenProps) {
             value={email}
             onChangeText={(t) => {
               setEmail(t);
-              setError('');
+              if (backendError) clearError();
             }}
             placeholder="adres@email.com"
             keyboardType="email-address"
+            editable={!isLoading}
           />
 
             <View style={{ position: 'relative' }}>
@@ -74,10 +85,11 @@ export default function LoginScreen({ navigation } : LoginScreenProps) {
               value={password}
               onChangeText={(t) => {
                 setPassword(t);
-                setError('');
+                if (backendError) clearError();
               }}
               placeholder="••••••••"
               secure={!passwordVisible}
+              editable={!isLoading}
             />
 
             <View style={styles.eyeWrapper}>
@@ -89,19 +101,22 @@ export default function LoginScreen({ navigation } : LoginScreenProps) {
           </View>
 
           {/* Błąd */}
-          {error !== '' && (
+          {backendError && (
             <View style={styles.errorBox}>
-              <Text style={styles.errorText}>{error}</Text>
+              <Text style={styles.errorText}>{backendError}</Text>
             </View>
           )}
 
           {/* Przycisk */}
-          <Button title="Zaloguj się" onPress={handleLogin} />
+          <Button title="Zaloguj się" onPress={handleLogin} loading={isLoading} disabled={isLoading}/>
 
           {/* Link do rejestracji */}
           <TouchableOpacity
             style={styles.linkRow}
-            onPress={() => navigation.navigate('Register')}
+            onPress={() => {
+              clearError();
+              navigation.navigate('Register');
+            }}
           >
             <Text style={styles.linkText}>
               Nie masz konta?{' '}

@@ -535,3 +535,5 @@ postgres_data/
 *.lscache
 
 docker-compose.override.yml
+mobile/src/main.py
+mobile/src/wszystkie_pliki.txt

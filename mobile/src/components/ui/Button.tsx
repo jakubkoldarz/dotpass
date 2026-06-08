@@ -1,5 +1,14 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, ViewStyle, TextStyle, StyleProp } from 'react-native';
+import {
+  TouchableOpacity,
+  Text,
+  StyleSheet,
+  ViewStyle,
+  TextStyle,
+  StyleProp,
+  ActivityIndicator,
+} from 'react-native';
+
 import { colors, radius, spacing, typography } from '../../styles';
 
 type ButtonVariant = 'primary' | 'admin' | 'cancel';
@@ -9,36 +18,53 @@ type ButtonProps = {
   onPress: () => void;
   variant?: ButtonVariant;
   disabled?: boolean;
+  loading?: boolean;
   style?: StyleProp<ViewStyle>;
   textStyle?: StyleProp<TextStyle>;
-}
+};
 
 export default function Button({
   title,
   onPress,
   variant = 'primary',
   disabled = false,
+  loading = false,
   style,
   textStyle,
-} : ButtonProps) {
+}: ButtonProps) {
+  const isDisabled = disabled || loading;
+
   return (
     <TouchableOpacity
       onPress={onPress}
       activeOpacity={0.85}
-      disabled={disabled}
+      disabled={isDisabled}
       style={[
         styles.base,
         styles[variant],
-        disabled && styles.disabled,
+        isDisabled && styles.disabled,
         style,
       ]}
     >
-      <Text style={[styles.text, styles[`text_${variant}`], textStyle]}>
-        {title}
-      </Text>
+      {loading ? (
+        <ActivityIndicator
+          size="small"
+          color={spinnerColor[variant]}
+        />
+      ) : (
+        <Text style={[styles.text, styles[`text_${variant}`], textStyle]}>
+          {title}
+        </Text>
+      )}
     </TouchableOpacity>
   );
 }
+
+const spinnerColor = {
+  primary: colors.bg,
+  admin: colors.white,
+  cancel: colors.error,
+};
 
 const styles = StyleSheet.create({
   base: {
@@ -47,8 +73,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-
-  // warianty
+  
   primary: {
     backgroundColor: colors.accent,
   },
@@ -61,15 +86,23 @@ const styles = StyleSheet.create({
     borderColor: colors.error,
   },
 
-  // tekst
   text: {
     ...typography.body,
     fontWeight: '700',
     letterSpacing: 0.3,
   },
-  text_primary: { color: colors.bg },
-  text_admin: { color: colors.white },
-  text_cancel: { color: colors.error },
+
+  text_primary: {
+    color: colors.bg,
+  },
+
+  text_admin: {
+    color: colors.white,
+  },
+
+  text_cancel: {
+    color: colors.error,
+  },
 
   disabled: {
     opacity: 0.5,
