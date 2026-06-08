@@ -1,55 +1,47 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Platform } from 'react-native';
-
+import React, {useState, useCallback} from 'react';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Platform, RefreshControl } from 'react-native';
+import { useAuthStore, userRole } from '../stores/authStore';
 import { colors, layout, spacing, typography, radius } from '../styles';
+
 import Icon from '../components/shared/Icon';
 import Tile from '../components/ui/Tile';
 import AdminBanner from '../components/ui/AdminBanner';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../../App';
+import Input from '../components/ui/Input';
+import Button from '../components/ui/Button';
 
-interface HomeScreenProps {
-  navigation: {
-    navigate: (screen: string) => void;
-    replace: (screen: string) => void;
-  };
-  route: {
-    params?: {
-      user?: {
-        name: string;
-        isAdmin: boolean;
-      }
-    }
+type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
+
+export default function HomeScreen({ navigation } : Props) {
+  const { user, fetchProfile, logout } = useAuthStore();
+
+  const [refreshing, setRefreshing] = useState(false);
+  const [joinCode, setJoinCode] = useState('');
+
+  // FIX THIS
+  const handleJoinWorkspace = (()=>{});
+  const handleWorkspace = (()=>navigation.navigate('AdminWorkspaces'));
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchProfile();
+    setRefreshing(false);
+  }, [fetchProfile]);
+
+  if (!user) {
+    return (
+      <View style={styles.center}>
+        <Text style={{color: colors.error}}>Brak danych użytkownika.</Text>
+      </View>
+    )
   }
-}
 
-export default function HomeScreen({ navigation, route } : HomeScreenProps) {
-  const user = route.params?.user ?? { name: 'Użytkownik', isAdmin: false };
-  const isAdmin = user.isAdmin ?? false;
+  const isAdmin = user.isAdmin === true;
 
-  // Kafelki tylko dla admina
-  const adminTiles = [
-    {
-      iconName: 'Server',
-      label: 'Płytki',
-      sub: 'Zarządzaj urządzeniami NFC',
-      color: colors.blue,
-      onPress: () => navigation.navigate('Devices'),
-    },
-    {
-      iconName: 'Clock',
-      label: 'Logi',
-      sub: 'Historia otwarć drzwi',
-      color: '#FF6B35',
-      onPress: () => navigation.navigate('Logs'),
-    },
-    {
-      iconName: 'Settings',
-      label: 'Ustawienia',
-      sub: 'Konfiguracja aplikacji',
-      color: colors.muted,
-      disabled: true,
-      onPress: () => {},
-    },
-  ] as const;
+  const moderatedWorkspaces = (user?.workspaces || []).filter((w) => String(w.role) === 'Moderator');
+
+  const isUser = !isAdmin;
 
   return (
     <View style={layout.screenRoot}>
@@ -58,16 +50,20 @@ export default function HomeScreen({ navigation, route } : HomeScreenProps) {
         <View>
           <Text style={styles.greeting}>Witaj</Text>
           <Text style={styles.role}>
-            Zalogowany jako{' '}
-            <Text style={[styles.roleHighlight, isAdmin && styles.roleAdmin]}>
-              {isAdmin ? 'Administrator' : user.name}
-            </Text>
+            Zalogowany jako {user.firstName}
           </Text>
         </View>
 
         <TouchableOpacity
           style={styles.logoutBtn}
-          onPress={() => navigation.replace('Login')}
+          onPress={ async () => {
+            await logout();
+            navigation.reset({
+              index:0,
+              routes: [{name: 'Login'}]
+            })
+          }
+          }
         >
           <Icon name="LogOut" size={14} color={colors.muted} />
           <Text style={styles.logoutText}>Wyloguj</Text>
@@ -77,37 +73,90 @@ export default function HomeScreen({ navigation, route } : HomeScreenProps) {
       {/* Baner admina */}
       {isAdmin && <AdminBanner />}
 
-      <ScrollView contentContainerStyle={styles.grid} showsVerticalScrollIndicator={false}>
-        
-        {/* Widok admina */}
-        {isAdmin && (
-          <>
-            <Text style={styles.sectionLabel}>Panel administratora</Text>
-            {adminTiles.map((tile, i) => (
-              <Tile key={i} {...tile} />
-            ))}
-          </>
-        )}
+      <ScrollView
+        contentContainerStyle={styles.grid}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.accent}
+            colors={[colors.accent]}
+          />
+        }
+      >
 
-        {/* Widok zwykłego użytkownika */}
-        {!isAdmin && (
-          <>
-            <Text style={styles.sectionLabel}>Moje drzwi</Text>
 
-            {/* Placeholder */}
-            <View style={styles.placeholderCard}>
-              <Text style={styles.placeholderText}>
-                Tutaj pojawią się drzwi, do których masz dostęp.
-              </Text>
-            </View>
-          </>
-        )}
+          <>
+  <Text style={styles.sectionLabel}>Twoje workspace'y</Text>
+    
+    if (user.isAdmin) {
+      <Tile iconName='Layers' label='Workspacey' sub='Zarządzaj przestrzeniami' onPress={handleWorkspace} color='#9B59B6'/>
+    }
+
+    {/* Zimny start — user nie należy do żadnego workspace */}
+    {!user.isAdmin && user.workspaces && user.workspaces.length === 0 && (
+      <View style={styles.joinCard}>
+        <Text style={styles.joinText}>Nie należysz do żadnego workspace.</Text>
+
+        <Input
+          label="Kod workspace"
+          value={joinCode}
+          onChangeText={setJoinCode}
+          placeholder="Wpisz kod"
+        />
+
+        <Button title="Dołącz" onPress={handleJoinWorkspace} />
+      </View>
+    )}
+
+    {/* Lista workspace’ów */}
+    {user.workspaces && user.workspaces.map((ws) => {
+      const isModeratorHere = (user.userGroups || []).some(g => g.workspaceId === ws.id);
+
+      return (
+        <TouchableOpacity
+          key={ws.id}
+          style={[
+            styles.workspaceCard,
+            isModeratorHere && styles.workspaceModerator
+          ]}
+          onPress={() => 
+            navigation.navigate('WorkspaceDetails', { workspaceId: ws.id, workspaceName: ws.name })
+          }
+        >
+          <View style={styles.workspaceHeader}>
+            <Text style={styles.workspaceName}>{ws.name}</Text>
+
+            {!isAdmin && isModeratorHere && (
+              <View style={styles.modBadge}>
+                <Text style={styles.modBadgeText}>MOD</Text>
+              </View>
+            )}
+          </View>
+
+          <Text style={styles.workspaceSub}>
+            {isModeratorHere ? 'Masz uprawnienia moderatora' : 'Użytkownik'}
+          </Text>
+        </TouchableOpacity>
+      );
+    })}
+  </>
+
+
+
       </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  center: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.bg,
+  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -153,4 +202,61 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.dim,
   },
+  workspaceCard: {
+  backgroundColor: colors.surface,
+  borderRadius: radius.lg,
+  padding: spacing.lg,
+  borderWidth: 1,
+  borderColor: colors.border,
+  marginBottom: spacing.md,
+},
+
+workspaceModerator: {
+  borderLeftWidth: 4,
+  borderLeftColor: colors.accent,
+},
+
+workspaceHeader: {
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+},
+
+workspaceName: {
+  fontSize: 16,
+  fontWeight: '700',
+  color: colors.white,
+},
+
+workspaceSub: {
+  fontSize: 12,
+  color: colors.dim,
+  marginTop: 4,
+},
+
+modBadge: {
+  backgroundColor: colors.accentFill,
+  paddingHorizontal: 8,
+  paddingVertical: 2,
+  borderRadius: radius.sm,
+},
+
+modBadgeText: {
+  color: colors.accent,
+  fontWeight: '700',
+  fontSize: 10,
+},
+
+joinCard: {
+  backgroundColor: colors.surface,
+  borderRadius: radius.lg,
+  padding: spacing.lg,
+  borderWidth: 1,
+  borderColor: colors.border,
+  marginBottom: spacing.lg,
+},
+joinText: {
+  color: colors.white,
+  marginBottom: spacing.md,
+},
 });

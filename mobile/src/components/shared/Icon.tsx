@@ -30,7 +30,9 @@ import {
   Search,
   EyeOff,
   Eye,
-  HandMetal
+  HandMetal,
+  Trash2,
+  UserMinus
 } from 'lucide-react-native';
 
 const MAP = {
@@ -62,7 +64,9 @@ const MAP = {
   Search,
   EyeOff,
   Eye,
-  HandMetal
+  HandMetal,
+  Trash2,
+  UserMinus
 };
 
 type IconProps = {

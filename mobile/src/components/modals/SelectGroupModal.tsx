@@ -1,29 +1,43 @@
-import React, { useState } from 'react';
-import { View, Text, Modal, TextInput, TouchableOpacity, FlatList, StyleSheet } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, Modal, TextInput, TouchableOpacity, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
 import { colors, spacing, radius, typography } from '../../styles';
 import Icon from '../shared/Icon';
-import { MOCK_GROUPS, MOCK_GROUP_MEMBERS } from '../shared/Mockdata';
-
-type GroupItem = {
-  id: string | number;
-  name: string;
-}
+import { getGroupsWorkspace, groupInfoShort } from '../../api/userGroupApi';
 
 type SelectGroupModalProps = {
   visible?: boolean;
   onClose: () => void;
-  onSelect: (group: GroupItem) => void;
-  existingIds: (number | string)[];
+  onSelect: (group: groupInfoShort) => void;
+  existingIds: string[];
+  workspaceId: string;
 }
 
-export default function SelectGroupModal({ visible, onClose, onSelect, existingIds }: SelectGroupModalProps) {
+export default function SelectGroupModal({ visible, onClose, onSelect, existingIds, workspaceId }: SelectGroupModalProps) {
   const [query, setQuery] = useState('');
+  const [groups, setGroups] = useState<groupInfoShort[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  const filtered = MOCK_GROUPS
+  useEffect(() => {
+    if (visible && workspaceId) {
+      fetchGroups();
+    }
+  }, [visible, workspaceId]);
+
+  const fetchGroups = async () => {
+    setLoading(true);
+    try {
+      const data = await getGroupsWorkspace(workspaceId);
+      setGroups(data);
+    } catch (error) {
+      console.warn("Nie udało się pobrać grup przestrzeni", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filtered = groups
     .filter(g => !existingIds.includes(g.id))
-    .filter(g =>
-      g.name.toLowerCase().includes(query.toLowerCase())
-    );
+    .filter(g => g.name.toLowerCase().includes(query.toLowerCase()));
 
   return (
     <Modal visible={visible} animationType="slide">
@@ -47,94 +61,42 @@ export default function SelectGroupModal({ visible, onClose, onSelect, existingI
         />
       </View>
 
-      <FlatList
-        data={filtered}
-        keyExtractor={(item) => String(item.id)}
-        contentContainerStyle={{ padding: spacing.lg }}
-        renderItem={({ item }) => (
-          <View style={styles.row}>
-            <View style={styles.meta}>
-              <Text style={styles.name}>{item.name}</Text>
-              <Text style={styles.email}>
-                {(MOCK_GROUP_MEMBERS[item.id as keyof typeof MOCK_GROUP_MEMBERS] || []).length} członków
-              </Text>
-            </View>
+      {loading ? (
+        <ActivityIndicator size="large" color={colors.accent} style={{ marginTop: 20 }} />
+      ) : (
+        <FlatList
+          data={filtered}
+          keyExtractor={(item) => String(item.id)}
+          contentContainerStyle={{ padding: spacing.lg }}
+          ListEmptyComponent={<Text style={{color: colors.dim, textAlign: 'center'}}>Brak grup do dodania.</Text>}
+          renderItem={({ item }) => (
+            <View style={styles.row}>
+              <View style={styles.meta}>
+                <Text style={styles.name}>{item.name}</Text>
+              </View>
 
-            <TouchableOpacity
-              style={styles.addBtn}
-              onPress={() => {
-                onSelect(item);
-                onClose();
-              }}
-            >
-              <Text style={styles.addText}>Dodaj</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-      />
+              <TouchableOpacity style={styles.addBtn} onPress={() => { onSelect(item); onClose(); }}>
+                <Text style={styles.addText}>Dodaj</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        />
+      )}
     </View>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  header: {
-    paddingTop: 50,
-    paddingBottom: 16,
-    paddingHorizontal: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.borderSoft,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-  },
+  header: { paddingTop: 50, paddingBottom: 16, paddingHorizontal: 20, borderBottomWidth: 1, borderBottomColor: colors.borderSoft, flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   backBtn: { padding: 4 },
   title: { ...typography.screenTitle, flex: 1, fontSize: 20 },
-
-  searchBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-    margin: spacing.lg,
-    paddingHorizontal: spacing.md,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  input: {
-    flex: 1,
-    color: colors.white,
-    paddingVertical: spacing.md,
-    marginLeft: spacing.md,
-  },
-
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    marginBottom: spacing.md,
-  },
+  searchBox: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface, margin: spacing.lg, paddingHorizontal: spacing.md, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border },
+  input: { flex: 1, color: colors.white, paddingVertical: spacing.md, marginLeft: spacing.md },
+  row: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface, borderRadius: radius.lg, padding: spacing.lg, borderWidth: 1, borderColor: colors.border, marginBottom: spacing.md },
   meta: { flex: 1 },
   name: { fontSize: 15, fontWeight: '700', color: colors.white },
-  email: { fontSize: 12, color: colors.dim, marginTop: 2 },
-
-  addBtn: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    backgroundColor: colors.accentFill,
-    borderRadius: radius.sm,
-    borderWidth: 1,
-    borderColor: colors.accentRing,
-  },
+  addBtn: { paddingHorizontal: 12, paddingVertical: 6, backgroundColor: colors.accentFill, borderRadius: radius.sm, borderWidth: 1, borderColor: colors.accentRing },
   addText: { color: colors.accent, fontWeight: '700' },
-
-  modalRoot: {
-  flex: 1,
-  backgroundColor: colors.bg, 
-},
-
+  modalRoot: { flex: 1, backgroundColor: colors.bg },
 });

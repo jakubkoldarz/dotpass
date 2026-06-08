@@ -1,5 +1,6 @@
 export const colors = {
   bg:         '#0D0D0D',
+  bgAlt:      '#2A2A2A',
   surface:    '#161616',
   surfaceAlt: '#1A1A1A',
 
@@ -23,5 +24,6 @@ export const colors = {
   faint:  '#444444',
   ghost:  '#333333',
 
-  yellow:       '#b7be21ff'
+  yellow:       '#b7be21ff',
+  card:     '#007263ff',
 };
