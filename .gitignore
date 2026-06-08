@@ -511,3 +511,7 @@ mobile/ios/.xcode.env.local
 mobile/.metro-health-check*
 mobile/coverage/
 # ...additional mobile-specific temp
+
+postgres_data/
+*.lscache
+docker-compose.override.yml
