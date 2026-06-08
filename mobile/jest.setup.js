@@ -7,6 +7,11 @@ jest.mock('react-native-nfc-manager', () => ({
   isSupported: jest.fn().mockResolvedValue(true),
   registerTagEvent: jest.fn(),
   unregisterTagEvent: jest.fn(),
+  setEventListener: jest.fn(),
+
+  NfcEvents: {
+    DiscoverTag: 'DiscoverTag',
+  },
 }));
 
 jest.mock('@react-navigation/native', () => {
@@ -39,3 +44,4 @@ jest.mock('./src/stores/authStore', () => ({
     isLoading: false,
   }),
 }));
+
