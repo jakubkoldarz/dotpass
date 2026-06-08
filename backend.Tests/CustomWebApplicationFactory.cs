@@ -1,26 +1,43 @@
-using backend.Data;
-using backend.Controllers;
+using global::backend.Data;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging; 
 
 namespace backend.Tests;
 
 public class CustomWebApplicationFactory : WebApplicationFactory<Program>
 {
+    private readonly string _dbName = $"TestDb_{Guid.NewGuid()}";
+
+    public CustomWebApplicationFactory()
+    {
+        Environment.SetEnvironmentVariable("JWT_SECRET", "ToJestBardzoTajnyKluczDoTestowKtoryMusiMiecWystarczajacaDlugosc!");
+        Environment.SetEnvironmentVariable("Jwt:Secret", "ToJestBardzoTajnyKluczDoTestowKtoryMusiMiecWystarczajacaDlugosc!");
+    }
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
-        builder.ConfigureServices(services =>
+        builder.ConfigureLogging(logging =>
         {
-            // Usuwamy prawdziwą konfigurację bazy danych
-            services.RemoveAll(typeof(DbContextOptions<AplicationDbContext>));
+            logging.ClearProviders(); 
+        });
 
-            // Dodajemy bazę w pamięci do testów
+        builder.ConfigureTestServices(services =>
+        {
+            var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>));
+            if (descriptor != null) services.Remove(descriptor);
+
+            var serviceProvider = new ServiceCollection()
+                .AddEntityFrameworkInMemoryDatabase()
+                .BuildServiceProvider();
+
             services.AddDbContext<ApplicationDbContext>(options =>
             {
-                options.UseInMemoryDatabase("TestDatabase");
+                options.UseInMemoryDatabase(_dbName);
+                options.UseInternalServiceProvider(serviceProvider);
             });
         });
     }
