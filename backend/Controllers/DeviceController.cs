@@ -74,22 +74,6 @@ namespace backend.Controllers
         public async Task<IActionResult> AddUserAccess(Guid deviceId, UserIdRequest request)
         {
             await EnsureAccessAsync(DeviceAccessLevel.FullAccess, deviceId: deviceId);
-            Console.WriteLine("=========================");
-            Console.WriteLine("=========================");
-            Console.WriteLine("=========================");
-            Console.WriteLine("=========================");
-            Console.WriteLine("=========================");
-            Console.WriteLine("=========================");
-            Console.WriteLine("=========================");
-            Console.WriteLine(deviceId);
-            Console.WriteLine(request.UserId);
-            Console.WriteLine("=========================");
-            Console.WriteLine("=========================");
-            Console.WriteLine("=========================");
-            Console.WriteLine("=========================");
-            Console.WriteLine("=========================");
-            Console.WriteLine("=========================");
-            Console.WriteLine("=========================");
 
             await _deviceService.AddUserAccessAsync(request.UserId, deviceId);
             return Ok();
