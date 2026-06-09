@@ -88,15 +88,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     login: async (creditentials) => {
         set({isLoading: true, error: null});
         try {
-            console.log("Logowanie");
             const response = await axiosInstance.post('/api/auth/login', creditentials);
             const { token } = response.data;
 
-            console.log(`Token: ${token}`);
 
             await get().setToken(token);
 
-            console.log("Bierzemy profil.");
 
             await get().fetchProfile();
 
@@ -115,7 +112,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
 
         await axiosInstance.post('/api/auth/register', data);
-        console.log("Konto utworzone");
         const loginSuccess = await get().login({
                 email: data.email,
                 password: data.password

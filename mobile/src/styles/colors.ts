@@ -15,6 +15,14 @@ export const colors = {
   blueFill:   '#000C2A',
   blueRing:   '#0052FF40',
 
+  purple:     '#9B59B6',
+  purpleFill: '#9B59B615',
+  purpleRing: '#9B59B640',
+
+  orange:     '#FF6B35',
+  orangeFill: '#FF6B3515',
+  orangeRing: '#FF6B3540',
+
   error:      '#FF4444',
   errorBg:    '#1A0606',
 
@@ -23,7 +31,4 @@ export const colors = {
   dim:    '#555555',
   faint:  '#444444',
   ghost:  '#333333',
-
-  yellow:       '#b7be21ff',
-  card:     '#007263ff',
 };

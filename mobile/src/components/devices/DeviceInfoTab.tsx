@@ -1,36 +1,31 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Switch } from 'react-native';
 
 import { colors, spacing, radius, typography } from '../../styles';
 import Input from '../ui/Input';
 import Button from '../ui/Button';
 
-import { useNavigation } from '@react-navigation/native';
-
 type DeviceStructure = {
   id: string;
   name: string;
   macaddress: string;
+  isPublicInWorkspace: boolean;
 }
 
 type DeviceInfoTabProps = {
   device: DeviceStructure;
-  onRename: (newName: string) => void;
-  onNfcWrite?: () => void;
+  onUpdate: (patch: { name?: string; isPublicInWorkspace?: boolean }) => void;
+  onNfcWrite: () => void;
   onTest: () => void;
   status: 'ok' | 'warning' | 'error';
 }
 
-export default function DeviceInfoTab({ device, onRename, onNfcWrite, onTest, status }: DeviceInfoTabProps) {
-
-    const navigation = useNavigation();
-
+export default function DeviceInfoTab({ device, onUpdate, onNfcWrite, onTest, status }: DeviceInfoTabProps) {
   const [name, setName] = useState(device.name || '');
-  // ok | warning | error
 
   const statusColor =
     status === 'error'   ? colors.error :
-    status === 'warning' ? '#FFB020' :
+    status === 'warning' ? colors.orange :
     colors.accent;
 
   return (
@@ -43,12 +38,29 @@ export default function DeviceInfoTab({ device, onRename, onNfcWrite, onTest, st
         onChangeText={setName}
         placeholder="Wpisz nazwę"
       />
-
       <Button
         title="Zapisz nazwę"
-        onPress={() => onRename(name)}
+        onPress={() => onUpdate({ name })}
         style={{ marginTop: spacing.sm }}
       />
+
+      {/* Publiczny dostęp */}
+      <View style={styles.card}>
+        <View style={styles.publicRow}>
+          <View style={styles.publicMeta}>
+            <Text style={styles.publicLabel}>Publiczny w workspace</Text>
+            <Text style={styles.publicSub}>
+              Każdy członek tej przestrzeni może otworzyć te drzwi
+            </Text>
+          </View>
+          <Switch
+            value={device.isPublicInWorkspace}
+            onValueChange={(val) => onUpdate({ isPublicInWorkspace: val })}
+            trackColor={{ false: colors.border, true: colors.accentRing }}
+            thumbColor={device.isPublicInWorkspace ? colors.accent : colors.dim}
+          />
+        </View>
+      </View>
 
       {/* Dane techniczne */}
       <View style={styles.card}>
@@ -71,13 +83,13 @@ export default function DeviceInfoTab({ device, onRename, onNfcWrite, onTest, st
       <Button
         title="Zaprogramuj tag NFC"
         variant="admin"
-        onPress={() => navigation.navigate('NfcWrite', { deviceId: device.id })}
+        onPress={onNfcWrite}
         style={{ marginTop: spacing.xl }}
       />
 
       {/* Test */}
       <Button
-        title="Testuj płytkę"
+        title="Testuj płytkę (otwórz drzwi)"
         variant="primary"
         onPress={onTest}
         style={{ marginTop: spacing.md }}
@@ -120,5 +132,24 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
+  },
+  publicRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.lg,
+  },
+  publicMeta: {
+    flex: 1,
+  },
+  publicLabel: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: colors.white,
+  },
+  publicSub: {
+    fontSize: 12,
+    color: colors.dim,
+    marginTop: 3,
+    lineHeight: 17,
   },
 });
