@@ -537,3 +537,8 @@ postgres_data/
 docker-compose.override.yml
 mobile/src/main.py
 mobile/src/wszystkie_pliki.txt
+mobile/android/app/build.gradle
+mobile/android/gradle.properties
+mobile/android/app/build.gradle
+mobile/android/app/build.gradle
+mobile/android/gradle.properties

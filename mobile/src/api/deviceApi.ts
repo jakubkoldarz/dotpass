@@ -45,7 +45,7 @@ export interface deviceInfoShort {
 export interface deviceInfoMy {
     id: string;
     name?: string;
-    isPublicInWorkspacce?: boolean;
+    isPublicInWorkspace?: boolean;
 }
 
 // Admin + Mod + User
@@ -56,25 +56,25 @@ export async function getDeviceDetails(deviceId: string): Promise<deviceResponse
 
 // Admin + Mod
 export async function updateDevice(deviceId: string, updating: deviceUpdate): Promise<deviceInfoShort> {
-    const res = await axiosInstance.put<deviceInfoShort>(`/api/device/${deviceId}`, {updating})
+    const res = await axiosInstance.put<deviceInfoShort>(`/api/device/${deviceId}`, updating)
     return res.data;
 }
 
-// Admin
+// Admin only
 export async function getAllDevices(): Promise<deviceInfoShort[]> {
     const res = await axiosInstance.get<deviceInfoShort[]>(`/api/device`)
     return res.data;
 }
 
 // Admin + Mod + User
-export async function getWorkspaceDevices(workspaceId: string,): Promise<deviceInfoShort[]> {
-    const res = await axiosInstance.get<deviceInfoShort[]>(`/api/device/${workspaceId}`)
+export async function getWorkspaceDevices(workspaceId: string): Promise<deviceInfoShort[]> {
+    const res = await axiosInstance.get<deviceInfoShort[]>(`/api/device/workspace/${workspaceId}`)
     return res.data;
 }
 
-// Admin + Mod
+// Admin only
 export async function assignDevice(workspaceId: string, deviceId: string): Promise<number> {
-    const res = await axiosInstance.post<number>(`/api/device/${deviceId}/assign`, {workspaceId})
+    const res = await axiosInstance.post<number>(`/api/device/${deviceId}/assign`, { workspaceId })
     return res.status;
 }
 
@@ -86,7 +86,7 @@ export async function deleteDevice(deviceId: string): Promise<number> {
 
 // Admin + Mod
 export async function accessGrantDevice(deviceId: string, userId: string): Promise<number> {
-    const res = await axiosInstance.post<number>(`/api/device/${deviceId}/user-access`, {userId})
+    const res = await axiosInstance.post<number>(`/api/device/${deviceId}/user-access`, { "userId": userId })
     return res.status;
 }
 
@@ -98,7 +98,7 @@ export async function accessDenyDevice(deviceId: string, userId: string): Promis
 
 // Admin + Mod
 export async function accessGrantDeviceGroup(deviceId: string, userGroupId: string): Promise<number> {
-    const res = await axiosInstance.post<number>(`/api/device/${deviceId}/group-access`, {userGroupId})
+    const res = await axiosInstance.post<number>(`/api/device/${deviceId}/group-access`, { userGroupId: userGroupId })
     return res.status;
 }
 
@@ -116,6 +116,6 @@ export async function getMyDevices(): Promise<deviceInfoMy[]> {
 
 // Admin + Mod + User
 export async function openDoor(deviceId: string, time: number): Promise<number> {
-    const res = await axiosInstance.post<number>(`/api/device/${deviceId}/activate/${time}`)
+    const res = await axiosInstance.post<number>(`/api/device/${deviceId}/activate/${time * 1000}`)
     return res.status;
 }
