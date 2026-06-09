@@ -71,7 +71,7 @@ namespace backend.Services
             if (user == null) throw new BadRequestException($"User does not exist {userId}");
             if (device == null) throw new BadRequestException($"Device does not exist {deviceId}");
 
-            if (!user.WorkspaceMemberships.Any(wm => wm.WorkspaceId == deviceId))
+            if (!user.WorkspaceMemberships.Any(wm => wm.WorkspaceId == device.WorkspaceId))
                 throw new BadRequestException("User and device are not in the same workspace");
 
             var accessExist = await _db.DeviceUserAccesses
