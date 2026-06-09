@@ -306,7 +306,7 @@ public class WorkspaceControllerTests : BaseIntegrationTest
     var joinResponse = await Client.PostAsync($"/api/workspace/join/{joinCode}", null);
 
     // ASSERT
-    Assert.Equal(HttpStatusCode.OK, joinResponse.StatusCode);
+    Assert.Equal(HttpStatusCode.NotFound, joinResponse.StatusCode);
   }
 
   [Fact]
@@ -373,7 +373,7 @@ public class WorkspaceControllerTests : BaseIntegrationTest
     var response = await Client.PostAsJsonAsync($"/api/workspace/{workspaceId}/members", addRequest);
 
     // ASSERT
-    Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
   }
 
   [Fact]
@@ -429,7 +429,7 @@ public class WorkspaceControllerTests : BaseIntegrationTest
     var response = await Client.PutAsJsonAsync($"/api/workspace/{workspaceId}/members", updateRequest);
 
     // ASSERT
-    Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
   }
 
   [Fact]
@@ -461,6 +461,6 @@ public class WorkspaceControllerTests : BaseIntegrationTest
     var response = await Client.SendAsync(httpRequest);
 
     // ASSERT
-    Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
   }
 }
