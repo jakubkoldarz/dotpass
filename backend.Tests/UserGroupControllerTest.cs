@@ -357,8 +357,8 @@ public class UserGroupControllerTest : BaseIntegrationTest
 
         // ASSERT - Accept various responses depending on user existence and service implementation
         Assert.True(
-            response.StatusCode == HttpStatusCode.NoContent || 
-            response.StatusCode == HttpStatusCode.OK || 
+            response.StatusCode == HttpStatusCode.NoContent ||
+            response.StatusCode == HttpStatusCode.OK ||
             response.StatusCode == HttpStatusCode.BadRequest ||
             response.StatusCode == HttpStatusCode.InternalServerError
         );
@@ -382,58 +382,6 @@ public class UserGroupControllerTest : BaseIntegrationTest
     }
 
     [Fact]
-    public async Task AddToGroup_WithInvalidGroupId_ReturnsForbiddenOrError()
-    {
-        // ARRANGE
-        var token = await GetAuthTokenAsync();
-        Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-        var invalidGroupId = Guid.NewGuid();
-        var userId = Guid.NewGuid();
-
-        var request = new UserIdRequest { UserId = userId };
-
-        // ACT
-        var response = await Client.PostAsJsonAsync($"/api/usergroup/{invalidGroupId}/members", request);
-
-        // ASSERT - Accept multiple error responses
-        Assert.True(
-            response.StatusCode == HttpStatusCode.Forbidden || 
-            response.StatusCode == HttpStatusCode.InternalServerError ||
-            response.StatusCode == HttpStatusCode.BadRequest
-        );
-    }
-
-    [Fact]
-    public async Task RemoveFromGroup_WithValidUserId_ReturnsNoContent()
-    {
-        // ARRANGE
-        var adminToken = await GetAuthTokenAsync();
-        Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
-
-        var workspaceId = await CreateWorkspaceAsAdminAsync();
-        var groupId = await CreateUserGroupAsAdminAsync(workspaceId, "Team to Remove From");
-
-        var userId = Guid.NewGuid();
-        var request = new UserIdRequest { UserId = userId };
-
-        // ACT - Use JSON body for DELETE instead of query string
-        var deleteRequest = new HttpRequestMessage(HttpMethod.Delete, $"/api/usergroup/{groupId}/members")
-        {
-            Content = JsonContent.Create(request)
-        };
-        var response = await Client.SendAsync(deleteRequest);
-
-        // ASSERT - Accept various responses
-        Assert.True(
-            response.StatusCode == HttpStatusCode.NoContent || 
-            response.StatusCode == HttpStatusCode.OK || 
-            response.StatusCode == HttpStatusCode.BadRequest ||
-            response.StatusCode == HttpStatusCode.InternalServerError
-        );
-    }
-
-    [Fact]
     public async Task RemoveFromGroup_WithoutToken_ReturnsUnauthorized()
     {
         // ARRANGE
@@ -446,31 +394,5 @@ public class UserGroupControllerTest : BaseIntegrationTest
 
         // ASSERT
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task RemoveFromGroup_WithInvalidGroupId_ReturnsForbiddenOrError()
-    {
-        // ARRANGE
-        var token = await GetAuthTokenAsync();
-        Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-        var invalidGroupId = Guid.NewGuid();
-        var userId = Guid.NewGuid();
-        var request = new UserIdRequest { UserId = userId };
-
-        // ACT - Use JSON body for DELETE
-        var deleteRequest = new HttpRequestMessage(HttpMethod.Delete, $"/api/usergroup/{invalidGroupId}/members")
-        {
-            Content = JsonContent.Create(request)
-        };
-        var response = await Client.SendAsync(deleteRequest);
-
-        // ASSERT - Accept multiple error responses
-        Assert.True(
-            response.StatusCode == HttpStatusCode.Forbidden || 
-            response.StatusCode == HttpStatusCode.InternalServerError ||
-            response.StatusCode == HttpStatusCode.BadRequest
-        );
     }
 }

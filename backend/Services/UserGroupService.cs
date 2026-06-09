@@ -149,14 +149,25 @@ namespace backend.Services
             await _db.SaveChangesAsync();
         }
 
-        public Task AddToGroupAsync(Guid userToAddId, Guid userGroupId)
+        public async Task AddToGroupAsync(Guid userToAddId, Guid userGroupId)
         {
-            throw new NotImplementedException();
+            var groupMembership = new GroupMember
+            {
+                UserGroupId = userGroupId,
+                UserId = userToAddId
+            };
+
+            _db.GroupMembers.Add(groupMembership);
+            await _db.SaveChangesAsync();
         }
 
-        public Task RemoveFromGroupAsync(Guid userToRemoveId, Guid userGroupId)
+        public async Task RemoveFromGroupAsync(Guid userToRemoveId, Guid userGroupId)
         {
-            throw new NotImplementedException();
+            var groupToDelete = await _db.GroupMembers.FirstOrDefaultAsync(gm => gm.UserId == userToRemoveId && gm.UserGroupId == userGroupId);
+            if(groupToDelete == null) throw new NotFoundException();
+
+            _db.GroupMembers.Remove(groupToDelete);
+            await _db.SaveChangesAsync();
         }
     }
 }
