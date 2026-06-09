@@ -56,7 +56,7 @@ namespace backend.Controllers
         public async Task<IActionResult> AssignDevice(Guid deviceId, AssignDeviceRequest request)
         {
             await EnsureAccessAsync(DeviceAccessLevel.FullAccess, workspaceId: request.WorkspaceId);
-
+            
             await _deviceService.AssingAsync(deviceId, request.WorkspaceId);
             return Ok();
         }
@@ -75,7 +75,7 @@ namespace backend.Controllers
         {
             await EnsureAccessAsync(DeviceAccessLevel.FullAccess, deviceId: deviceId);
 
-            await _deviceService.AddUserAccessAsync(deviceId, request.UserId);
+            await _deviceService.AddUserAccessAsync(request.UserId, deviceId);
             return Ok();
         }
 
@@ -84,7 +84,7 @@ namespace backend.Controllers
         {
             await EnsureAccessAsync(DeviceAccessLevel.FullAccess, deviceId: deviceId);
 
-            await _deviceService.RemoveUserAccessAsync(deviceId, request.UserId);
+            await _deviceService.RemoveUserAccessAsync(request.UserId, deviceId);
             return Ok();
         }
 
@@ -93,7 +93,7 @@ namespace backend.Controllers
         {
             await EnsureAccessAsync(DeviceAccessLevel.FullAccess, deviceId: deviceId);
 
-            await _deviceService.AddGroupAccessAsync(deviceId, request.UserGroupId);
+            await _deviceService.AddGroupAccessAsync(request.UserGroupId, deviceId);
             return Ok();
         }
 
@@ -102,7 +102,7 @@ namespace backend.Controllers
         {
             await EnsureAccessAsync(DeviceAccessLevel.FullAccess, deviceId: deviceId);
 
-            await _deviceService.RemoveGroupAccessAsync(deviceId, request.UserGroupId);
+            await _deviceService.RemoveGroupAccessAsync(request.UserGroupId, deviceId);
             return Ok();
         }
 
