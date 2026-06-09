@@ -68,6 +68,23 @@ namespace backend.Services
             var user = await _db.Users.FindAsync(userId);
             var device = await _db.Devices.FindAsync(deviceId);
 
+            Console.WriteLine("=========================");
+            Console.WriteLine("=========================");
+            Console.WriteLine("=========================");
+            Console.WriteLine("=========================");
+            Console.WriteLine("=========================");
+            Console.WriteLine("=========================");
+            Console.WriteLine("=========================");
+            Console.WriteLine(deviceId);
+            Console.WriteLine(userId);
+            Console.WriteLine("=========================");
+            Console.WriteLine("=========================");
+            Console.WriteLine("=========================");
+            Console.WriteLine("=========================");
+            Console.WriteLine("=========================");
+            Console.WriteLine("=========================");
+            Console.WriteLine("=========================");
+
             if (user == null) throw new BadRequestException("User does not exist");
             if (device == null) throw new BadRequestException("Device does not exist");
 

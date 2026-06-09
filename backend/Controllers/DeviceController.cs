@@ -56,7 +56,7 @@ namespace backend.Controllers
         public async Task<IActionResult> AssignDevice(Guid deviceId, AssignDeviceRequest request)
         {
             await EnsureAccessAsync(DeviceAccessLevel.FullAccess, workspaceId: request.WorkspaceId);
-
+            
             await _deviceService.AssingAsync(deviceId, request.WorkspaceId);
             return Ok();
         }
@@ -74,6 +74,22 @@ namespace backend.Controllers
         public async Task<IActionResult> AddUserAccess(Guid deviceId, UserIdRequest request)
         {
             await EnsureAccessAsync(DeviceAccessLevel.FullAccess, deviceId: deviceId);
+            Console.WriteLine("=========================");
+            Console.WriteLine("=========================");
+            Console.WriteLine("=========================");
+            Console.WriteLine("=========================");
+            Console.WriteLine("=========================");
+            Console.WriteLine("=========================");
+            Console.WriteLine("=========================");
+            Console.WriteLine(deviceId);
+            Console.WriteLine(request.UserId);
+            Console.WriteLine("=========================");
+            Console.WriteLine("=========================");
+            Console.WriteLine("=========================");
+            Console.WriteLine("=========================");
+            Console.WriteLine("=========================");
+            Console.WriteLine("=========================");
+            Console.WriteLine("=========================");
 
             await _deviceService.AddUserAccessAsync(request.UserId, deviceId);
             return Ok();
