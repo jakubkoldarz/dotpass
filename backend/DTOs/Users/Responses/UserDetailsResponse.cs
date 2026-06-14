@@ -10,6 +10,7 @@ namespace backend.DTOs.Users.Responses
         public string Email { get; set; } = string.Empty;
         public string Firstname { get; set; } = string.Empty;
         public string Lastname { get; set; } = string.Empty;
+        public string OfflineSecret { get; set; } = string.Empty;
         public bool IsAdmin { get; set; }
         public IEnumerable<WorkspaceMemberResponse> Workspaces { get; set; } = [];
         public IEnumerable<UserGroupResponse> UserGroups { get; set; } = [];

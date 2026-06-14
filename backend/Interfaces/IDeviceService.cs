@@ -20,5 +20,6 @@ namespace backend.Interfaces
         Task<IEnumerable<BasicDeviceResponse>> GetAccessibleDevicesAsync(Guid userId);
         Task<DeviceAccessLevel> CheckAccessAsync(Guid? userId = null, Guid? workspaceId = null, Guid? deviceId = null);
         Task ActivateAsync(Guid userId, Guid deviceId, int time);
+        Task VerifyOfflineUnlock(UnlockRequest request);
     }
 }

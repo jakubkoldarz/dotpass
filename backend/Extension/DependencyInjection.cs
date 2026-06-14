@@ -7,6 +7,8 @@ namespace backend.Extension
     {
         public static IServiceCollection AddServices(this IServiceCollection services)
         {
+            services.AddHostedService<MqttBackgroundService>();
+
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IWorkspaceService, WorkspaceService>();

@@ -24,6 +24,7 @@ namespace backend.Models
         [Required]
         [MaxLength(50)]
         public string Lastname { get; set; } = string.Empty;
+        public string OfflineSecret { get; set; } = string.Empty;
 
         public bool IsAdmin { get; set; }
 

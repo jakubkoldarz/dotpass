@@ -25,7 +25,7 @@ namespace backend.Controllers
                 Expires = DateTime.UtcNow.AddDays(7)
             });
 
-            return Ok(tokens.JwtToken);
+            return Ok(new JwtResponse(tokens.JwtToken));
         }
 
         [HttpPost("login")]

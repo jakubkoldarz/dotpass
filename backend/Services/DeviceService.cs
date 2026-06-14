@@ -9,6 +9,8 @@ using backend.Interfaces;
 using backend.Models;
 using backend.Models.Enums;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace backend.Services
 {
@@ -131,6 +133,19 @@ namespace backend.Services
 
         public async Task<IEnumerable<BasicDeviceResponse>> GetAccessibleDevicesAsync(Guid userId)
         {
+            var user = await _db.Users.FindAsync(userId);
+            if (user == null) throw new NotFoundException("User was not found");
+
+            if(user.IsAdmin)
+            {
+                return await _db.Devices.Select(d => new BasicDeviceResponse
+                {
+                    Id = d.Id,
+                    IsPublicInWorkspace = d.IsPublicInWorkspace,
+                    Name = d.Name,
+                }).ToListAsync();
+            }
+
             var devices = await _db.Devices
                 .Where(d =>
                     d.UserAccesses.Any(ua => ua.UserId == userId) ||
@@ -154,11 +169,13 @@ namespace backend.Services
                 .Select(d => new DeviceResponse
                 {
                     Id = d.Id,
+                    LastSeen = d.LastSeen,
+                    UnlockMode = d.UnlockMode,
                     IsPublicInWorkspace = d.IsPublicInWorkspace ?? false,
                     Name = d.Name,
                     MacAddress = d.MacAddress,
                     WorkspaceId = d.WorkspaceId
-                }).ToListAsync();
+                }).OrderByDescending(d => d.LastSeen).ToListAsync();
 
             return devices;
         }
@@ -172,6 +189,8 @@ namespace backend.Services
                 .Select(d => new DeviceResponse
                 {
                     Id = d.Id,
+                    LastSeen = d.LastSeen,
+                    UnlockMode = d.UnlockMode,
                     IsPublicInWorkspace = d.IsPublicInWorkspace ?? false,
                     Name = d.Name,
                     MacAddress = d.MacAddress,
@@ -191,6 +210,8 @@ namespace backend.Services
                 {
                     Id = d.Id,
                     Name = d.Name,
+                    UnlockMode = d.UnlockMode,
+                    LastSeen = d.LastSeen,
                     WorkspaceId = d.WorkspaceId,
                     Workspace = d.Workspace == null ? null : new WorkspaceResponse
                     {
@@ -276,6 +297,7 @@ namespace backend.Services
                     var deviceToAdd = new Device
                     {
                         MacAddress = macAddress,
+                        LastSeen = DateTime.UtcNow,
                         IsPublicInWorkspace = false,
                     };
                     _db.Devices.Add(deviceToAdd);
@@ -283,6 +305,7 @@ namespace backend.Services
                 else
                 {
                     existingDevice.MacAddress = macAddress;
+                    existingDevice.LastSeen = DateTime.UtcNow;
                 }
             }
 
@@ -295,17 +318,54 @@ namespace backend.Services
             if (deviceToUpdate == null) throw new NotFoundException();
 
             deviceToUpdate.Name = request.Name;
+            deviceToUpdate.UnlockMode = request.UnlockMode;
             deviceToUpdate.IsPublicInWorkspace = request.IsPublicInWorkspace;
             await _db.SaveChangesAsync();
 
             return new DeviceResponse
             {
                 Id = deviceId,
+                LastSeen = deviceToUpdate.LastSeen,
+                UnlockMode = deviceToUpdate.UnlockMode,
                 IsPublicInWorkspace = deviceToUpdate.IsPublicInWorkspace ?? false,
                 MacAddress = deviceToUpdate.MacAddress,
                 Name = deviceToUpdate.Name,
                 WorkspaceId = deviceToUpdate.WorkspaceId
             };
+        }
+
+        public async Task VerifyOfflineUnlock(UnlockRequest request)
+        {
+            var user = await _db.Users.FindAsync(request.UserId);
+            var device = await _db.Devices.FirstOrDefaultAsync(d => d.MacAddress == request.MacAddress);
+
+            if (user == null) throw new NotFoundException("User was not found");
+            if (device == null) throw new NotFoundException("Device was not found");
+
+            var accesbileDevices = await GetAccessibleDevicesAsync(user.Id)
+                ?? throw new ForbiddenException("User does not have any device accesses");
+            
+            if (!accesbileDevices.Any(ad => ad.Id == device.Id)) throw new ForbiddenException();
+
+            var message = request.Nonce + request.UserId.ToString();
+            var secretBytes = Encoding.UTF8.GetBytes(user.OfflineSecret);
+            var messageBytes = Encoding.UTF8.GetBytes(message);
+
+            using (var hmac = new HMACSHA256(secretBytes))
+            {
+                var computedHashBytes = hmac.ComputeHash(messageBytes);
+                var computedHash = Convert.ToHexString(computedHashBytes).ToLower();
+
+                if (computedHash != request.Hash.ToLower())
+                {
+                    throw new UnauthorizedException("Invalid hash");
+                }
+            }
+
+            string topic = $"devices/{device.MacAddress}/cmd";
+            string payload = $"open {5000}";
+
+            await _emqxService.PublishMessageAsync(topic, payload);
         }
     }
 }
