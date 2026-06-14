@@ -39,6 +39,8 @@ jobs:
         echo "EMQX_API_URL=${{ secrets.EMQX_API_URL }}" >> .env
         echo "EMQX_API_KEY=${{ secrets.EMQX_API_KEY }}" >> .env
         echo "EMQX_API_SECRET=${{ secrets.EMQX_SECRET_KEY }}" >> .env
+        echo "EMQX_BROKER_CLIENT_USERNAME=${{ secrets.EMQX_BROKER_CLIENT_USERNAME }}" >> .env
+        echo "EMQX_BROKER_CLIENT_PASSWORD=${{ secrets.EMQX_BROKER_CLIENT_PASSWORD }}" >> .env
 
     - name: Deploy with Docker Compose
       run: |

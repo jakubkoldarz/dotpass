@@ -15,11 +15,10 @@ namespace backend.Models
 
         [MaxLength(100)]
         public string? Name { get; set; }
-
         public bool? IsPublicInWorkspace { get; set; } = false;
         public UnlockMode UnlockMode { get; set; } = UnlockMode.NfcOnly;
-
         public Guid? WorkspaceId { get; set; }
+        public DateTime LastSeen { get; set; }
 
         [ForeignKey(nameof(WorkspaceId))]
         public Workspace? Workspace { get; set; }
