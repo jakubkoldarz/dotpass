@@ -77,9 +77,10 @@ namespace backend.Services
             var passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
 
             var isFirstUser = !await _db.Users.AnyAsync();
-
             var refreshToken = _tokenService.CreateRefreshToken();
 
+            var offlineSecret = Guid.NewGuid().ToString("N");
+            
             var user = new User
             {
                 Firstname = request.Firstname,
@@ -88,6 +89,7 @@ namespace backend.Services
                 PasswordHash = passwordHash,
                 RefreshToken = refreshToken,
                 RefreshTokenExpiry = DateTime.UtcNow.AddDays(7),
+                OfflineSecret = offlineSecret,
                 IsAdmin = isFirstUser
             };
             
@@ -108,6 +110,7 @@ namespace backend.Services
                     Email = u.Email,
                     Firstname = u.Firstname,
                     Lastname = u.Lastname,
+                    OfflineSecret = u.OfflineSecret,
                     IsAdmin = u.IsAdmin,
                     UserGroups = u.GroupMemberships.Select(gm => new UserGroupResponse
                     {

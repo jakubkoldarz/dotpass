@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using backend.Models.Enums;
+using System.ComponentModel.DataAnnotations;
 
 namespace backend.DTOs.Devices.Requests
 {
@@ -8,5 +9,7 @@ namespace backend.DTOs.Devices.Requests
         public string Name { get; set; } = string.Empty;
         [Required]
         public bool IsPublicInWorkspace { get; set; }
+        [Required]
+        public UnlockMode UnlockMode { get; set; }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using backend.Models.Enums;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace backend.Models
@@ -15,7 +16,8 @@ namespace backend.Models
         [MaxLength(100)]
         public string? Name { get; set; }
 
-        public bool? IsPublicInWorkspace { get; set; }
+        public bool? IsPublicInWorkspace { get; set; } = false;
+        public UnlockMode UnlockMode { get; set; } = UnlockMode.NfcOnly;
 
         public Guid? WorkspaceId { get; set; }
 

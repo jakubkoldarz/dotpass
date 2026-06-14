@@ -154,6 +154,7 @@ namespace backend.Services
                 .Select(d => new DeviceResponse
                 {
                     Id = d.Id,
+                    UnlockMode = d.UnlockMode,
                     IsPublicInWorkspace = d.IsPublicInWorkspace ?? false,
                     Name = d.Name,
                     MacAddress = d.MacAddress,
@@ -172,6 +173,7 @@ namespace backend.Services
                 .Select(d => new DeviceResponse
                 {
                     Id = d.Id,
+                    UnlockMode = d.UnlockMode,
                     IsPublicInWorkspace = d.IsPublicInWorkspace ?? false,
                     Name = d.Name,
                     MacAddress = d.MacAddress,
@@ -191,6 +193,7 @@ namespace backend.Services
                 {
                     Id = d.Id,
                     Name = d.Name,
+                    UnlockMode = d.UnlockMode,
                     WorkspaceId = d.WorkspaceId,
                     Workspace = d.Workspace == null ? null : new WorkspaceResponse
                     {
@@ -295,12 +298,14 @@ namespace backend.Services
             if (deviceToUpdate == null) throw new NotFoundException();
 
             deviceToUpdate.Name = request.Name;
+            deviceToUpdate.UnlockMode = request.UnlockMode;
             deviceToUpdate.IsPublicInWorkspace = request.IsPublicInWorkspace;
             await _db.SaveChangesAsync();
 
             return new DeviceResponse
             {
                 Id = deviceId,
+                UnlockMode = deviceToUpdate.UnlockMode,
                 IsPublicInWorkspace = deviceToUpdate.IsPublicInWorkspace ?? false,
                 MacAddress = deviceToUpdate.MacAddress,
                 Name = deviceToUpdate.Name,
