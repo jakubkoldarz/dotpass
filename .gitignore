@@ -539,3 +539,8 @@ mobile/src/main.py
 mobile/src/wszystkie_pliki.txt
 
 esp32_test/
+mobile/android/app/build.gradle
+mobile/android/gradle.properties
+mobile/android/app/build.gradle
+mobile/android/app/build.gradle
+mobile/android/gradle.properties

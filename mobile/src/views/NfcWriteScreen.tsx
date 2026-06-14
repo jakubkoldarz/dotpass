@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, Alert, StyleSheet, ActivityIndicator } from 'react-native';
 import NfcManager, { Ndef, NfcTech } from 'react-native-nfc-manager';
+import { colors } from '../styles';
 
 interface NfcWriteScreenProps {
   route: {
@@ -13,7 +14,7 @@ interface NfcWriteScreenProps {
   };
 }
 
-export default function NfcWriteScreen({ route, navigation } : NfcWriteScreenProps) {
+export default function NfcWriteScreen({ route, navigation }: NfcWriteScreenProps) {
   const { deviceId } = route.params;
   const isWritingRef = useRef(false);
 
@@ -24,11 +25,11 @@ export default function NfcWriteScreen({ route, navigation } : NfcWriteScreenPro
 
       try {
         await NfcManager.start();
-        
         await NfcManager.requestTechnology(NfcTech.Ndef);
 
+        const uri = `dotpass://door/${deviceId}`;
         const bytes = Ndef.encodeMessage([
-          Ndef.textRecord(`nfcdoor:${deviceId}`)
+          Ndef.uriRecord(uri)
         ]);
 
         await NfcManager.ndefHandler.writeNdefMessage(bytes);
@@ -56,7 +57,7 @@ export default function NfcWriteScreen({ route, navigation } : NfcWriteScreenPro
 
   return (
     <View style={styles.container}>
-      <ActivityIndicator size="large" color="#00E5FF" style={{ marginBottom: 20 }} />
+      <ActivityIndicator size="large" color={colors.accent} style={{ marginBottom: 20 }} />
       <Text style={styles.text}>Zbliż czysty tag NFC do pleców telefonu...</Text>
       <Text style={styles.subtext}>Trzymaj nieruchomo przez około 2 sekundy.</Text>
     </View>
@@ -65,22 +66,22 @@ export default function NfcWriteScreen({ route, navigation } : NfcWriteScreenPro
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1, 
-    justifyContent: 'center', 
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#0D0D0D',
-    padding: 20
+    backgroundColor: colors.bg,
+    padding: 20,
   },
   text: {
-    color: '#FFFFFF',
+    color: colors.white,
     fontSize: 18,
     fontWeight: '600',
     textAlign: 'center',
   },
   subtext: {
-    color: '#888888',
+    color: colors.dim,
     fontSize: 14,
     marginTop: 10,
     textAlign: 'center',
-  }
+  },
 });

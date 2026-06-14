@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../App';
 import { colors, layout, spacing, typography, radius } from '../styles';
@@ -11,15 +11,15 @@ import DeviceAccessTab from '../components/devices/DeviceAccessTab';
 import SelectUserModal from '../components/modals/SelectUserModal';
 import SelectGroupModal from '../components/modals/SelectGroupModal';
 
-import { 
-  getDeviceDetails, 
-  deviceResponse, 
-  updateDevice, 
-  accessDenyDevice, 
-  accessDenyDeviceGroup, 
-  openDoor, 
+import {
+  getDeviceDetails,
+  deviceResponse,
+  updateDevice,
+  accessDenyDevice,
+  accessDenyDeviceGroup,
+  openDoor,
   accessGrantDevice,
-  accessGrantDeviceGroup
+  accessGrantDeviceGroup,
 } from '../api/deviceApi';
 import { useToast } from '../hooks/useToast';
 
@@ -28,11 +28,11 @@ type Props = NativeStackScreenProps<RootStackParamList, 'DeviceConfig'>;
 export default function DeviceConfigScreen({ route, navigation }: Props) {
   const { deviceId, workspaceId } = route.params;
   const toast = useToast();
-  
+
   const [device, setDevice] = useState<deviceResponse | null>(null);
   const [loading, setLoading] = useState(true);
-  
-  const [tab, setTab] = useState<'info' | 'access' | 'logs'>('info'); 
+
+  const [tab, setTab] = useState<'info' | 'access' | 'logs'>('info');
   const [userModal, setUserModal] = useState(false);
   const [groupModal, setGroupModal] = useState(false);
 
@@ -53,27 +53,29 @@ export default function DeviceConfigScreen({ route, navigation }: Props) {
     fetchDeviceData();
   }, [deviceId]);
 
-  const handleRename = async (newName: string) => {
+  // Jeden handler do wszystkich aktualizacji — merguje patch z aktualnym stanem
+  const handleUpdate = async (patch: { name?: string; isPublicInWorkspace?: boolean }) => {
     if (!device) return;
     try {
-      await updateDevice(deviceId, { name: newName, isPublicInWorkspace: device.isPublicInWorkspace || false });
-      toast.success('Zmieniono nazwę urządzenia');
+      await updateDevice(deviceId, {
+        name: patch.name ?? device.name ?? '',
+        isPublicInWorkspace: patch.isPublicInWorkspace ?? device.isPublicInWorkspace ?? false,
+      });
+      toast.success('Zapisano zmiany');
       fetchDeviceData();
     } catch (e: any) {
-      toast.error('Nie udało się zmienić nazwy');
+      toast.error('Nie udało się zapisać zmian');
     }
   };
 
   const handleTestDoor = async () => {
     try {
-      await openDoor(deviceId, 5); 
+      await openDoor(deviceId, 5);
       toast.success('Wysłano sygnał otwarcia drzwi!');
     } catch (e: any) {
       toast.error('Błąd otwierania drzwi');
     }
   };
-
-
 
   const handleRemoveUser = async (userId: string) => {
     try {
@@ -104,17 +106,16 @@ export default function DeviceConfigScreen({ route, navigation }: Props) {
     );
   }
 
-
   const mappedUsers = (device.userAccesses || []).map(u => ({
     id: u.id,
     name: `${u.firstname} ${u.lastname}`,
-    email: u.email
+    email: u.email,
   }));
 
   const mappedGroups = (device.groupAccesses || []).map(g => ({
     id: g.id,
     name: g.name,
-    members: []
+    members: [],
   }));
 
   const deviceStatus = device.name ? 'ok' : 'warning';
@@ -126,23 +127,31 @@ export default function DeviceConfigScreen({ route, navigation }: Props) {
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Icon name="ArrowLeft" size={24} color={colors.white} />
         </TouchableOpacity>
-        <Text style={styles.title}>{device.name || 'Nowa Płytka'}</Text>
-        <View style={{ width: 28 }} /> 
+        <View style={styles.headerMeta}>
+          <Text style={styles.title}>{device.name || 'Nowa płytka'}</Text>
+          {device.isPublicInWorkspace && (
+            <View style={styles.publicBadge}>
+              <Icon name="LockOpen" size={10} color={colors.accent} />
+              <Text style={styles.publicBadgeText}>Publiczna</Text>
+            </View>
+          )}
+        </View>
+        <View style={{ width: 28 }} />
       </View>
-
 
       <View style={styles.segmentContainer}>
-        <TouchableOpacity style={[styles.segment, tab === 'info' && styles.segmentActive]} onPress={() => setTab('info')}>
-          <Text style={[styles.segmentText, tab === 'info' && styles.segmentTextActive]}>Informacje</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.segment, tab === 'access' && styles.segmentActive]} onPress={() => setTab('access')}>
-          <Text style={[styles.segmentText, tab === 'access' && styles.segmentTextActive]}>Dostęp</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.segment, tab === 'logs' && styles.segmentActive]} onPress={() => setTab('logs')}>
-          <Text style={[styles.segmentText, tab === 'logs' && styles.segmentTextActive]}>Logi</Text>
-        </TouchableOpacity>
+        {(['info', 'access', 'logs'] as const).map((t) => (
+          <TouchableOpacity
+            key={t}
+            style={[styles.segment, tab === t && styles.segmentActive]}
+            onPress={() => setTab(t)}
+          >
+            <Text style={[styles.segmentText, tab === t && styles.segmentTextActive]}>
+              {t === 'info' ? 'Informacje' : t === 'access' ? 'Dostęp' : 'Logi'}
+            </Text>
+          </TouchableOpacity>
+        ))}
       </View>
-
 
       <ScrollView contentContainerStyle={styles.content}>
         {tab === 'info' && (
@@ -151,10 +160,11 @@ export default function DeviceConfigScreen({ route, navigation }: Props) {
               id: device.id,
               name: device.name || '',
               macaddress: device.macAddress || 'Brak MAC',
+              isPublicInWorkspace: device.isPublicInWorkspace ?? false,
             }}
-            onRename={handleRename}
-            status={deviceStatus}
+            onUpdate={handleUpdate}
             onNfcWrite={() => navigation.navigate('NfcWrite', { deviceId: device.id })}
+            status={deviceStatus}
             onTest={handleTestDoor}
           />
         )}
@@ -163,52 +173,52 @@ export default function DeviceConfigScreen({ route, navigation }: Props) {
           <>
             <DeviceAccessTab
               device={{ id: device.id }}
-              users={mappedUsers} 
-              groups={mappedGroups} 
+              users={mappedUsers}
+              groups={mappedGroups}
               onAddUser={() => setUserModal(true)}
               onAddGroup={() => setGroupModal(true)}
               onRemoveUser={handleRemoveUser}
               onRemoveGroup={handleRemoveGroup}
             />
 
-
             <SelectUserModal
-  visible={userModal}
-  onClose={() => setUserModal(false)}
-  existingIds={mappedUsers.map(u => u.id) as string[]}
-  workspaceId={workspaceId} 
-  onSelect={async (user) => { 
-    try {
-      await accessGrantDevice(deviceId, user.id);
-      toast.success('Przyznano dostęp użytkownikowi!');
-      fetchDeviceData();
-    } catch (e: any) {
-      toast.error('Błąd podczas przyznawania dostępu');
-    }
-  }}
-/>
+              visible={userModal}
+              onClose={() => setUserModal(false)}
+              existingIds={mappedUsers.map(u => u.id)}
+              workspaceId={workspaceId}
+              onSelect={async (user) => {
+                try {
+                  await accessGrantDevice(deviceId, user.id);
+                  toast.success('Przyznano dostęp użytkownikowi!');
+                  fetchDeviceData();
+                } catch (e: any) {
+                  toast.error('Błąd podczas przyznawania dostępu');
+                }
+              }}
+            />
 
-<SelectGroupModal
-  visible={groupModal}
-  onClose={() => setGroupModal(false)}
-  existingIds={mappedGroups.map(g => g.id) as string[]}
-  workspaceId={workspaceId} 
-  onSelect={async (group) => { 
-    try {
-      await accessGrantDeviceGroup(deviceId, group.id);
-      toast.success('Przyznano dostęp grupie!');
-      fetchDeviceData(); 
-    } catch (e: any) {
-      toast.error('Błąd podczas przyznawania dostępu grupie');
-    }
-  }}
-/>
+            <SelectGroupModal
+              visible={groupModal}
+              onClose={() => setGroupModal(false)}
+              existingIds={mappedGroups.map(g => g.id)}
+              workspaceId={workspaceId}
+              onSelect={async (group) => {
+                try {
+                  await accessGrantDeviceGroup(deviceId, group.id);
+                  toast.success('Przyznano dostęp grupie!');
+                  fetchDeviceData();
+                } catch (e: any) {
+                  toast.error('Błąd podczas przyznawania dostępu grupie');
+                }
+              }}
+            />
           </>
         )}
 
         {tab === 'logs' && (
           <View style={styles.placeholderBox}>
-            <Text style={styles.placeholderText}>Logi otwarć drzwi wkrótce.</Text>
+            <Icon name="Clock" size={28} color={colors.dim} />
+            <Text style={styles.placeholderText}>Logi otwarć drzwi — wkrótce.</Text>
           </View>
         )}
       </ScrollView>
@@ -217,17 +227,59 @@ export default function DeviceConfigScreen({ route, navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  loadingText: { color: colors.dim, marginTop: spacing.md },
-  header: { paddingTop: 50, paddingBottom: 16, paddingHorizontal: 20, borderBottomWidth: 1, borderBottomColor: colors.borderSoft, flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: spacing.md },
+  loadingText: { color: colors.dim },
+  header: {
+    paddingTop: 50,
+    paddingBottom: 16,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.borderSoft,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
   backBtn: { padding: 4 },
-  title: { ...typography.screenTitle, flex: 1, fontSize: 22 },
-  segmentContainer: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: colors.border },
+  headerMeta: {
+    flex: 1,
+    gap: 4,
+  },
+  title: { ...typography.screenTitle, fontSize: 22 },
+  publicBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    alignSelf: 'flex-start',
+    backgroundColor: colors.accentFill,
+    borderWidth: 1,
+    borderColor: colors.accentRing,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: radius.xs,
+  },
+  publicBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: colors.accent,
+  },
+  segmentContainer: {
+    flexDirection: 'row',
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
   segment: { flex: 1, paddingVertical: 14, alignItems: 'center' },
   segmentActive: { borderBottomWidth: 2, borderBottomColor: colors.accent },
   segmentText: { fontSize: 13, color: colors.dim, fontWeight: '600' },
   segmentTextActive: { color: colors.accent },
   content: { padding: spacing.lg },
-  placeholderBox: { backgroundColor: colors.surface, borderRadius: radius.lg, padding: spacing.xl, borderWidth: 1, borderColor: colors.border, alignItems: 'center' },
+  placeholderBox: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    padding: spacing.xl,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: 'center',
+    gap: spacing.md,
+  },
   placeholderText: { fontSize: 14, color: colors.dim },
 });

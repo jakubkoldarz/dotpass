@@ -64,7 +64,7 @@ export async function createGroupsWorkspace(workspaceId: string, name: string): 
 
 // Admin + Mod 
 export async function addUserToGroup(userGroupId: string, userId: string): Promise<number> {
-    const res = await axiosInstance.post<number>(`/api/usergroup/${userGroupId}/members`, {userId})
+    const res = await axiosInstance.post<number>(`/api/usergroup/${userGroupId}/members`, {"userId":userId})
     return res.status;
 }
 

@@ -6,8 +6,8 @@ import {
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../App';
 import { getWorkspaces, createWorkspace, WorkspaceResponse } from '../api/workspaceApi';
-import { colors, layout, spacing, typography } from '../styles';
-import  Icon  from '../components/shared/Icon'
+import { colors, layout, spacing, typography, radius } from '../styles';
+import Icon from '../components/shared/Icon';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'AdminWorkspaces'>;
 
@@ -52,25 +52,31 @@ export default function AdminWorkspacesScreen({ navigation }: Props) {
         workspaceName: item.name 
       })}
     >
-      <View>
+      <View style={styles.cardIcon}>
+        <Icon name="Layers" size={18} color={colors.purple} />
+      </View>
+      <View style={styles.cardMeta}>
         <Text style={styles.wsName}>{item.name}</Text>
         <Text style={styles.wsId}>ID: {item.id}</Text>
       </View>
-      <Icon name="ChevronRight" color={colors.dim} />
+      <Icon name="ChevronRight" color={colors.dim} size={18} />
     </TouchableOpacity>
   );
 
   return (
     <View style={layout.screenRoot}>
       <View style={styles.header}>
-        <Text style={typography.screenTitle}>Wszystkie Workspace</Text>
+        <View>
+          <Text style={typography.screenTitle}>Workspace'y</Text>
+          <Text style={styles.subtitle}>Wszystkie przestrzenie w systemie</Text>
+        </View>
         <TouchableOpacity onPress={() => setModalVisible(true)} style={styles.addButton}>
-          <Text style={styles.addButtonText}>+ Nowy</Text>
+          <Icon name="Plus" size={18} color={colors.white} />
         </TouchableOpacity>
       </View>
 
       {loading ? (
-        <ActivityIndicator color={colors.blue} style={{ marginTop: 50 }} />
+        <ActivityIndicator color={colors.accent} style={{ marginTop: 50 }} />
       ) : (
         <FlatList
           data={workspaces}
@@ -81,7 +87,7 @@ export default function AdminWorkspacesScreen({ navigation }: Props) {
             <RefreshControl refreshing={refreshing} onRefresh={() => {
               setRefreshing(true);
               fetchWorkspaces();
-            }} />
+            }} tintColor={colors.accent} />
           }
           ListEmptyComponent={
             <Text style={styles.emptyText}>Brak przestrzeni w systemie. Utwórz pierwszą!</Text>
@@ -103,10 +109,10 @@ export default function AdminWorkspacesScreen({ navigation }: Props) {
             />
             <View style={styles.modalButtons}>
               <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.btnCancel}>
-                <Text style={{ color: colors.white }}>Anuluj</Text>
+                <Text style={{ color: colors.muted }}>Anuluj</Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={handleCreateWorkspace} style={styles.btnConfirm}>
-                <Text style={{ color: colors.white, fontWeight: 'bold' }}>Stwórz</Text>
+                <Text style={{ color: colors.bg, fontWeight: 'bold' }}>Stwórz</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -118,33 +124,78 @@ export default function AdminWorkspacesScreen({ navigation }: Props) {
 
 const styles = StyleSheet.create({
   header: { 
-    flexDirection: 'row', 
-    justifyContent: 'space-between', 
-    alignItems: 'center', 
-    padding: spacing.xl, 
-    marginTop: 40 
-  },
-  addButton: { backgroundColor: colors.blue, paddingHorizontal: 15, paddingVertical: 8, borderRadius: 8 },
-  addButtonText: { color: colors.white, fontWeight: 'bold' },
-  card: { 
-    backgroundColor: colors.card, 
-    padding: spacing.lg, 
-    borderRadius: 12, 
-    marginBottom: spacing.md,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.border
+    alignItems: 'flex-start',
+    padding: spacing.xl, 
+    marginTop: 40,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.borderSoft,
   },
-  wsName: { color: colors.white, fontSize: 16, fontWeight: '600' },
-  wsId: { color: colors.dim, fontSize: 12, marginTop: 4 },
+  subtitle: {
+    fontSize: 13,
+    color: colors.dim,
+    marginTop: 4,
+  },
+  addButton: { 
+    backgroundColor: colors.blue,
+    width: 36,
+    height: 36,
+    borderRadius: radius.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 4,
+  },
+  card: { 
+    backgroundColor: colors.surface,
+    padding: spacing.lg, 
+    borderRadius: radius.lg, 
+    marginBottom: spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  cardIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.md,
+    backgroundColor: colors.purpleFill,
+    borderWidth: 1,
+    borderColor: colors.purpleRing,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cardMeta: { flex: 1 },
+  wsName: { color: colors.white, fontSize: 15, fontWeight: '600' },
+  wsId: { color: colors.faint, fontSize: 11, marginTop: 3 },
   emptyText: { color: colors.dim, textAlign: 'center', marginTop: 50 },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', padding: 30 },
-  modalContent: { backgroundColor: colors.card, borderRadius: 20, padding: 25, borderWidth: 1, borderColor: colors.border },
-  modalTitle: { ...typography.sectionLabel, marginBottom: 15 },
-  input: { backgroundColor: colors.bg, color: colors.white, padding: 15, borderRadius: 10, marginBottom: 20 },
-  modalButtons: { flexDirection: 'row', justifyContent: 'flex-end', gap: 15 },
-  btnCancel: { padding: 10 },
-  btnConfirm: { backgroundColor: colors.blue, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 8 }
+  modalContent: { 
+    backgroundColor: colors.surface,
+    borderRadius: radius.xl,
+    padding: spacing.xl,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  modalTitle: { color: colors.white, fontSize: 18, fontWeight: '700', marginBottom: spacing.lg },
+  input: { 
+    backgroundColor: colors.bg,
+    color: colors.white,
+    padding: spacing.lg,
+    borderRadius: radius.md,
+    marginBottom: spacing.xl,
+    borderWidth: 1,
+    borderColor: colors.border,
+    fontSize: 15,
+  },
+  modalButtons: { flexDirection: 'row', justifyContent: 'flex-end', gap: spacing.lg },
+  btnCancel: { padding: spacing.md },
+  btnConfirm: { 
+    backgroundColor: colors.accent,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.md,
+    borderRadius: radius.sm,
+  },
 });
