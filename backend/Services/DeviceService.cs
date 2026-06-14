@@ -358,7 +358,7 @@ namespace backend.Services
 
                 if (computedHash != request.Hash.ToLower())
                 {
-                    throw new UnauthorizedException();
+                    throw new UnauthorizedException("Invalid hash");
                 }
             }
 
