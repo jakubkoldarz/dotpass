@@ -1,5 +1,4 @@
-﻿using backend.Data;
-using backend.DTOs.Devices.Requests;
+﻿using backend.DTOs.Devices.Requests;
 using backend.Interfaces;
 using MQTTnet;
 using System.Text.Json;
@@ -29,11 +28,39 @@ namespace backend.Services
             _mqttOptions = new MqttClientOptionsBuilder()
                 .WithTcpServer("emqx-broker", 1883)
                 .WithCredentials(username, password)
-                .WithClientId("DotPass_CSharp_Backend")
+                .WithClientId($"DotPass_Backend_{Guid.NewGuid().ToString()[..5]}")
                 .WithCleanSession()
+                .WithKeepAlivePeriod(TimeSpan.FromSeconds(30))
                 .Build();
 
             _mqttClient.ApplicationMessageReceivedAsync += HandleIncomingMessage;
+
+            _mqttClient.ConnectedAsync += async e =>
+            {
+                _logger.LogInformation("Connected to MQTT broker successfully!");
+
+                var subscribeOptions = new MqttClientSubscribeOptionsBuilder()
+                    .WithTopicFilter("access/requests")
+                    .Build();
+
+                await _mqttClient.SubscribeAsync(subscribeOptions);
+                _logger.LogInformation("Successfully subscribed to topic: access/requests");
+            };
+
+            _mqttClient.DisconnectedAsync += async e =>
+            {
+                _logger.LogWarning("Disconnected from MQTT broker! Trying to reconnect in 5 seconds...");
+                await Task.Delay(TimeSpan.FromSeconds(5));
+
+                try
+                {
+                    await _mqttClient.ConnectAsync(_mqttOptions);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError($"Automatic reconnect failed: {ex.Message}");
+                }
+            };
         }
 
         private async Task HandleIncomingMessage(MqttApplicationMessageReceivedEventArgs e)
@@ -72,29 +99,19 @@ namespace backend.Services
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            try
+            {
+                _logger.LogInformation("Initializing first MQTT connection...");
+                await _mqttClient.ConnectAsync(_mqttOptions, stoppingToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Initial connection failed (Broker might be offline): {ex.Message}");
+            }
+
             while (!stoppingToken.IsCancellationRequested)
             {
-                if(!_mqttClient.IsConnected)
-                {
-                    try
-                    {
-                        _logger.LogInformation("Trying to connect with MQTT broker...");
-                        await _mqttClient.ConnectAsync(_mqttOptions, stoppingToken);
-                        _logger.LogInformation("Connected to MQTT!");
-
-                        var subscribeOptions = new MqttClientSubscribeOptionsBuilder()
-                            .WithTopicFilter("access/requests")
-                            .Build();
-
-                        await _mqttClient.SubscribeAsync(subscribeOptions, stoppingToken);
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogWarning($"Broker error. Waiting 5 seconds... Error: {ex.Message}");
-                    }
-                }
-
-                await Task.Delay(5000, stoppingToken);
+                await Task.Delay(Timeout.Infinite, stoppingToken);
             }
         }
     }
