@@ -55,7 +55,8 @@ namespace backend.Services
                     {
                         Id = da.Device!.Id,
                         Name = da.Device.Name!,
-                        IsPublicInWorkspace = da.Device.IsPublicInWorkspace ?? false
+                        IsPublicInWorkspace = da.Device.IsPublicInWorkspace ?? false,
+                        UnlockMode = da.Device.UnlockMode,
                     })
 
                 }).FirstOrDefaultAsync();

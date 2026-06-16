@@ -143,6 +143,7 @@ namespace backend.Services
                     Id = d.Id,
                     IsPublicInWorkspace = d.IsPublicInWorkspace,
                     Name = d.Name,
+                    UnlockMode = d.UnlockMode,
                 }).ToListAsync();
             }
 
@@ -156,6 +157,7 @@ namespace backend.Services
                     Id = d.Id,
                     IsPublicInWorkspace = d.IsPublicInWorkspace,
                     Name = d.Name,
+                    UnlockMode = d.UnlockMode,
                 }).ToListAsync();
 
             return devices;
