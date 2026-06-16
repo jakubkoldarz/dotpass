@@ -57,6 +57,7 @@ namespace backend.Services
                         Name = da.Device.Name!,
                         IsPublicInWorkspace = da.Device.IsPublicInWorkspace ?? false,
                         UnlockMode = da.Device.UnlockMode,
+                        MacAddress = da.Device.MacAddress,
                     })
 
                 }).FirstOrDefaultAsync();

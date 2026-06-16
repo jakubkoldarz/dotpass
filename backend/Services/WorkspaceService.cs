@@ -102,7 +102,8 @@ namespace backend.Services
                         Id = d.Id,
                         Name = d.Name,
                         IsPublicInWorkspace = d.IsPublicInWorkspace ?? false,
-                        UnlockMode = d.UnlockMode
+                        UnlockMode = d.UnlockMode,
+                        MacAddress = d.MacAddress,
                     }),
 
                     UserGroups = w.UserGroups.Select(ug => new UserGroupResponse

@@ -123,7 +123,8 @@ namespace backend.Services
                         Id = da.DeviceId,
                         IsPublicInWorkspace = da.Device!.IsPublicInWorkspace ?? false,
                         Name = da.Device.Name,
-                        UnlockMode = da.Device.UnlockMode
+                        UnlockMode = da.Device.UnlockMode,
+                        MacAddress = da.Device.MacAddress,
                     }),
                     Workspaces = u.WorkspaceMemberships.Select(wm => new WorkspaceMemberResponse
                     {
