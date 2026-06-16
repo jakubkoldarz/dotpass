@@ -8,5 +8,6 @@ namespace backend.DTOs.Devices.Responses
         public string? Name { get; set; } = string.Empty;
         public bool? IsPublicInWorkspace { get; set; }
         public UnlockMode UnlockMode { get; set; }
+        public string MacAddress { get; set; } = string.Empty;
     }
 }

@@ -144,6 +144,7 @@ namespace backend.Services
                     IsPublicInWorkspace = d.IsPublicInWorkspace,
                     Name = d.Name,
                     UnlockMode = d.UnlockMode,
+                    MacAddress = d.MacAddress,
                 }).ToListAsync();
             }
 
@@ -158,6 +159,7 @@ namespace backend.Services
                     IsPublicInWorkspace = d.IsPublicInWorkspace,
                     Name = d.Name,
                     UnlockMode = d.UnlockMode,
+                    MacAddress = d.MacAddress
                 }).ToListAsync();
 
             return devices;
