@@ -1,4 +1,7 @@
 {
   "name": "DotPass",
-  "displayName": "DotPass"
+  "displayName": "DotPass",
+  "android": {
+    "package": "com.pam.dotpass"
+  }
 }

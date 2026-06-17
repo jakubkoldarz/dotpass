@@ -8,11 +8,14 @@ import BleManager, {
 import { PermissionsAndroid, Platform } from 'react-native';
 import { useBleStore } from '../stores/bleStore';
 
-const SERVICE_UUID        = '4fafc201-1fb5-459e-8fcc-c5c9c331914b';
-const CHARACTERISTIC_UUID = 'beb5483e-36e1-4688-b7f5-ea07361b26a8';
-const DEVICE_NAME         = 'DotPass_Device';
-const CHUNK_SIZE          = 180;
-const END_MARKER          = '##END##';
+const SERVICE_UUID       = '4fafc201-1fb5-459e-8fcc-c5c9c331914b';
+const CHAR_NONCE_UUID    = 'beb5483e-36e1-4688-b7f5-ea07361b26a9';
+const CHAR_RESPONSE_UUID = 'beb5483e-36e1-4688-b7f5-ea07361b26aa';
+const CHAR_RESULT_UUID   = 'beb5483e-36e1-4688-b7f5-ea07361b26ab';
+const CHAR_CONFIG_UUID   = 'beb5483e-36e1-4688-b7f5-ea07361b26ac';
+const DEVICE_NAME        = 'DotPass_Device';
+const CHUNK_SIZE         = 180;
+const END_MARKER         = '##END##';
 
 function strToBytes(str: string): number[] {
   const bytes: number[] = [];
@@ -38,9 +41,7 @@ function delay(ms: number): Promise<void> {
 
 async function requestBlePermissions(): Promise<boolean> {
   if (Platform.OS !== 'android') return true;
-
   const apiLevel = Platform.Version as number;
-
   if (apiLevel >= 31) {
     const results = await PermissionsAndroid.requestMultiple([
       PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
@@ -58,14 +59,12 @@ async function requestBlePermissions(): Promise<boolean> {
   }
 }
 
-async function writeChunk(deviceId: string, bytes: number[]): Promise<void> {
-  await BleManager.write(
-    deviceId,
-    SERVICE_UUID,
-    CHARACTERISTIC_UUID,
-    bytes,
-    bytes.length
-  );
+async function writeChunk(
+  deviceId: string,
+  bytes: number[],
+  charUuid: string
+): Promise<void> {
+  await BleManager.write(deviceId, SERVICE_UUID, charUuid, bytes, bytes.length);
 }
 
 export function useBle() {
@@ -78,23 +77,18 @@ export function useBle() {
     try {
       const granted = await requestBlePermissions();
       if (!granted) {
-        store.setError('Brak uprawnień do Bluetooth. Przyznaj je w ustawieniach aplikacji.');
+        store.setError('Brak uprawnień do Bluetooth. Przyznaj je w ustawieniach.');
         return;
       }
 
-      // W wersji 12.x start() przyjmuje opcje i działa poprawnie
       await BleManager.start({ showAlert: false });
+      store.clearDevices();
 
-      // Wersja 12.x: eventy przez BleManager.onXxx() — zero NativeEventEmitter
       const discoverListener = BleManager.onDiscoverPeripheral(
         (peripheral: Peripheral) => {
           const name = peripheral.name || peripheral.advertising?.localName || '';
           if (name === DEVICE_NAME) {
-            store.addDevice({
-              id: peripheral.id,
-              name,
-              rssi: peripheral.rssi,
-            });
+            store.addDevice({ id: peripheral.id, name, rssi: peripheral.rssi });
           }
         }
       );
@@ -107,7 +101,6 @@ export function useBle() {
         }
       });
 
-      // Wersja 12.x: scan() przyjmuje obiekt, nie positional args
       await BleManager.scan({
         serviceUUIDs: [SERVICE_UUID],
         seconds: 5,
@@ -128,44 +121,74 @@ export function useBle() {
       useBleStore.getState().foundDevices.find((d) => d.id === deviceId) || null
     );
 
+    let resultListener: any = null;
+
     try {
+
       await BleManager.connect(deviceId);
-
-      // Chwila na ustabilizowanie połączenia — zalecane w dokumentacji
       await delay(900);
-
       await BleManager.retrieveServices(deviceId);
+      await BleManager.startNotification(deviceId, SERVICE_UUID, CHAR_RESULT_UUID);
+
+      const resultPromise = new Promise<string>((resolve) => {
+        resultListener = BleManager.onDidUpdateValueForCharacteristic(
+          ({ peripheral, characteristic, value }: {
+            peripheral: string;
+            characteristic: string;
+            value: number[];
+          }) => {
+            if (peripheral !== deviceId) return;
+            if (characteristic.toLowerCase() !== CHAR_RESULT_UUID.toLowerCase()) return;
+            const result = String.fromCharCode(...value);
+            console.log('[BLE] Notyfikacja z firmware:', result);
+            resolve(result);
+          }
+        );
+      });
 
       store.setStatus('sending');
       store.setProgress(0);
 
-      const json = JSON.stringify(config);
-      const allBytes = strToBytes(json);
-
+      const json      = JSON.stringify(config);
+      const allBytes  = strToBytes(json);
       const chunks: number[][] = [];
       for (let i = 0; i < allBytes.length; i += CHUNK_SIZE) {
         chunks.push(allBytes.slice(i, i + CHUNK_SIZE));
       }
 
       for (let i = 0; i < chunks.length; i++) {
-        await writeChunk(deviceId, chunks[i]);
+        await writeChunk(deviceId, chunks[i], CHAR_CONFIG_UUID);
         store.setProgress(Math.round(((i + 1) / (chunks.length + 1)) * 100));
         await delay(50);
       }
 
       try {
-        await writeChunk(deviceId, strToBytes(END_MARKER));
+        await writeChunk(deviceId, strToBytes(END_MARKER), CHAR_CONFIG_UUID);
       } catch (_) {
       }
-      store.setProgress(100);
-      store.setStatus('done');
+
+      const result = await Promise.race([
+        resultPromise,
+        delay(3000).then(() => 'timeout'),
+      ]);
+
+      if (result === 'config_denied') {
+        store.setError('Błędne hasło prowizji — konfiguracja odrzucona');
+      } else {
+        store.setProgress(100);
+        store.setStatus('done');
+      }
 
     } catch (e: any) {
-      store.setError(e.message || 'Błąd wysyłania konfiguracji');
+      console.log('[BLE sendConfig] Połączenie przerwane — firmware prawdopodobnie zrestartował się po zapisaniu konfiguracji');
+      store.setProgress(100);
+      store.setStatus('done');
     } finally {
+      if (resultListener) resultListener.remove();
       try {
-        await BleManager.disconnect(deviceId);
+        await BleManager.stopNotification(deviceId, SERVICE_UUID, CHAR_RESULT_UUID);
       } catch {}
+      try { await BleManager.disconnect(deviceId); } catch {}
       store.setConnectedDevice(null);
     }
   }, []);

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { axiosInstance } from '../api/axiosInstance';
+import  axios  from 'axios'
 
 export interface ServerInfo {
     id: string;
@@ -64,14 +64,27 @@ export const useServerStore = create<ServerState>((set, get) => ({
     checkAndAddServer: async (name, url) => {
         set({isLoading: true, error: null});
 
+        console.log(url);
+
         let formattedUrl = url.trim().replace(/\/$/, "");
+
+        console.log(formattedUrl);
+
         if (!/^https?:\/\//i.test(formattedUrl)) {
             formattedUrl = `https://${formattedUrl}`;
         }
 
         try {
-            const response = await axiosInstance.get(`${formattedUrl}/api/check`, {timeout: 5000});
+
+            console.log(`${formattedUrl}/api/check`);
+
+            const response = await axios.get(`${formattedUrl}/api/check`, { 
+                timeout: 5000,
+                headers: { 'Content-Type': 'application/json' }
+                });
             
+            console.log(`Here?`);
+
             if (response.status == 200) {
                 const newServer: ServerInfo = {
                     id: Date.now().toString(),
