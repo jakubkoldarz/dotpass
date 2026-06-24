@@ -24,6 +24,7 @@ import GroupDetailsScreen from './src/views/GroupDetailsScreen';
 import WorkspaceUsersScreen from './src/views/WorkplaceUsersScreen';
 import NfcGlobalListener from './src/hooks/NfcGlobalListener';
 import BleConfigScreen from './src/views/BleConfigScreen';
+import { useProximityService } from './src/hooks/useProximityService';
 
 import { openDoor } from './src/api/deviceApi';
 import { useToastStore } from './src/stores/toastStore';
@@ -80,13 +81,16 @@ function extractDeviceIdFromTag(tag: any): string | null {
   }
 }
 
+function ProximityServiceLoader() {
+  useProximityService();
+  return null;
+}
+
 export default function App() {
   const { initServers, activeServer } = useServerStore();
   const { initAuth, user, isLoading: authLoading } = useAuthStore();
   const [isAppReady, setIsAppReady] = useState(false);
 
-  // deviceId z tagu przyłożonego przy zimnym starcie —
-  // przetwarzamy po tym jak user będzie zalogowany
   const pendingNfcDeviceId = useRef<string | null>(null);
 
   useEffect(() => {
@@ -98,8 +102,6 @@ export default function App() {
           console.warn('NFC nie jest wspierane lub wyłączone', ex);
         }
 
-        // getLaunchTagEvent() zwraca tag który odpalił aplikację przez intent,
-        // lub null jeśli app uruchomiona normalnie
         try {
           const initialTag = await NfcManager.getLaunchTagEvent();
           if (initialTag) {
@@ -124,11 +126,10 @@ export default function App() {
     setupApp();
   }, [initServers, initAuth]);
 
-  // Gdy app gotowa i user zalogowany — obsłuż pending NFC intent
   useEffect(() => {
     if (!isAppReady || authLoading) return;
     if (!pendingNfcDeviceId.current) return;
-    if (!user) return; // czekamy na zalogowanie przez refresh token
+    if (!user) return;
 
     const deviceId = pendingNfcDeviceId.current;
     pendingNfcDeviceId.current = null;
@@ -158,6 +159,7 @@ export default function App() {
       <ToastContainer />
       <NavigationContainer ref={navigationRef}>
         <NfcGlobalListener />
+        <ProximityServiceLoader />
         <StatusBar barStyle="light-content" backgroundColor="#0D0D0D" />
         <Stack.Navigator
           initialRouteName={initialRoute}

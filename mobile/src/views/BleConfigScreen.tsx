@@ -14,32 +14,50 @@ import { useBleStore, BleDevice } from '../stores/bleStore';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'BleConfig'>;
 
+const MODES = [
+  { value: 'nfc_only',   label: 'NFC Only',    sub: 'Otwiera tylko przez tag NFC' },
+  { value: 'proximity',  label: 'Proximity',   sub: 'Otwiera gdy jesteś w pobliżu' },
+  { value: 'long_range', label: 'Long Range',  sub: 'Otwiera z większej odległości' },
+];
+
 export default function BleConfigScreen({ navigation }: Props) {
   const { startScan, sendConfig } = useBle();
   const { status, error, foundDevices, progress } = useBleStore();
 
-  const [ssid, setSsid]   = useState('');
-  const [pass, setPass]   = useState('');
-  const [host, setHost]   = useState('');
-  const [port, setPort]   = useState('8883');
-  const [user, setUser]   = useState('');
-  const [mpwd, setMpwd]   = useState('');
+  // Podstawowe pola
+  const [ssid, setSsid] = useState('');
+  const [provPwd, setProvPwd] = useState('');
+  const [pass, setPass] = useState('');
+  const [host, setHost] = useState('');
+  const [port, setPort] = useState('8883');
+  const [user, setUser] = useState('');
+  const [mpwd, setMpwd] = useState('');
+
+  // Zaawansowane
+  const [mode, setMode]           = useState('nfc_only');
+  const [rssi, setRssi]           = useState('-70');
+  const [cooldown, setCooldown]   = useState('5000');
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   const [selectedDevice, setSelectedDevice] = useState<BleDevice | null>(null);
 
   const isFormValid =
     ssid.trim() && pass.trim() && host.trim() &&
-    port.trim() && user.trim() && mpwd.trim();
+    port.trim() && user.trim() && mpwd.trim() && provPwd.trim();
 
   const handleSend = async () => {
     if (!selectedDevice || !isFormValid) return;
     await sendConfig(selectedDevice.id, {
-      ssid: ssid.trim(),
-      pass: pass.trim(),
-      host: host.trim(),
-      port: parseInt(port.trim(), 10),
-      user: user.trim(),
-      mpwd: mpwd.trim(),
+      ssid:     ssid.trim(),
+      pass:     pass.trim(),
+      host:     host.trim(),
+      port:     parseInt(port.trim(), 10),
+      user:     user.trim(),
+      mpwd:     mpwd.trim(),
+      provision_pwd: provPwd.trim(),
+      mode,
+      rssi:     parseInt(rssi.trim(), 10),
+      cooldown: parseInt(cooldown.trim(), 10),
     });
   };
 
@@ -61,16 +79,84 @@ export default function BleConfigScreen({ navigation }: Props) {
 
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
 
-        {/* Formularz konfiguracji */}
+        {/* Podstawowa konfiguracja */}
         <Text style={styles.sectionLabel}>Dane konfiguracyjne</Text>
         <View style={styles.card}>
-          <Input label="SSID sieci WiFi"     value={ssid} onChangeText={setSsid} placeholder="NazwaSieci" />
-          <Input label="Hasło WiFi"          value={pass} onChangeText={setPass} placeholder="hasło" secure />
-          <Input label="Host MQTT"           value={host} onChangeText={setHost} placeholder="broker.example.com" autoCapitalize="none" />
-          <Input label="Port MQTT"           value={port} onChangeText={setPort} placeholder="8883" keyboardType="numeric" />
-          <Input label="Użytkownik MQTT"     value={user} onChangeText={setUser} placeholder="mqtt_user" autoCapitalize="none" />
-          <Input label="Hasło MQTT"          value={mpwd} onChangeText={setMpwd} placeholder="hasło MQTT" secure />
+          <Input label="SSID sieci WiFi"   value={ssid} onChangeText={setSsid} placeholder="NazwaSieci" />
+          <Input label="Hasło WiFi"        value={pass} onChangeText={setPass} placeholder="hasło" secure />
+          <Input label="Host MQTT"         value={host} onChangeText={setHost} placeholder="broker.example.com" autoCapitalize="none" />
+          <Input label="Port MQTT"         value={port} onChangeText={setPort} placeholder="8883" keyboardType="numeric" />
+          <Input label="Użytkownik MQTT"   value={user} onChangeText={setUser} placeholder="mqtt_user" autoCapitalize="none" />
+          <Input label="Hasło MQTT"        value={mpwd} onChangeText={setMpwd} placeholder="hasło MQTT" secure />
+          <Input label="Hasło prowizji"     value={provPwd} onChangeText={setProvPwd} placeholder="Hasło konfiguracji płytki" secure />
         </View>
+
+        {/* Sekcja zaawansowana */}
+        <TouchableOpacity
+          style={styles.advancedToggle}
+          onPress={() => setShowAdvanced(v => !v)}
+        >
+          <Text style={styles.advancedToggleText}>Ustawienia zaawansowane</Text>
+          <Icon
+            name="ChevronDown"
+            size={16}
+            color={colors.dim}
+            style={{ transform: [{ rotate: showAdvanced ? '180deg' : '0deg' }] }}
+          />
+        </TouchableOpacity>
+
+        {showAdvanced && (
+          <View style={styles.card}>
+
+            {/* Tryb zamka */}
+            <Text style={styles.fieldLabel}>Tryb zamka</Text>
+            <View style={styles.modeList}>
+              {MODES.map((m) => (
+                <TouchableOpacity
+                  key={m.value}
+                  style={[styles.modeRow, mode === m.value && styles.modeRowSelected]}
+                  onPress={() => setMode(m.value)}
+                >
+                  <View style={styles.modeRadio}>
+                    {mode === m.value && <View style={styles.modeRadioDot} />}
+                  </View>
+                  <View style={styles.modeMeta}>
+                    <Text style={[styles.modeLabel, mode === m.value && styles.modeLabelSelected]}>
+                      {m.label}
+                    </Text>
+                    <Text style={styles.modeSub}>{m.sub}</Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            {/* RSSI — tylko dla proximity i long_range */}
+            {mode !== 'nfc_only' && (
+              <Input
+                label="Próg sygnału RSSI (dBm)"
+                value={rssi}
+                onChangeText={setRssi}
+                placeholder="-70"
+                keyboardType="numeric"
+                style={{ marginTop: spacing.lg }}
+              />
+            )}
+
+            {/* Cooldown */}
+            <Input
+              label="Cooldown po otwarciu (ms)"
+              value={cooldown}
+              onChangeText={setCooldown}
+              placeholder="5000"
+              keyboardType="numeric"
+              style={{ marginTop: spacing.md }}
+            />
+            <Text style={styles.hint}>
+              Czas blokady po otwarciu drzwi. 5000 = 5 sekund.
+            </Text>
+
+          </View>
+        )}
 
         {/* Skanowanie */}
         <Text style={[styles.sectionLabel, { marginTop: spacing.xl }]}>Urządzenie</Text>
@@ -104,9 +190,7 @@ export default function BleConfigScreen({ navigation }: Props) {
                       <Text style={styles.deviceRssi}>RSSI: {d.rssi} dBm</Text>
                     )}
                   </View>
-                  {isSelected && (
-                    <Icon name="Check" size={18} color={colors.accent} />
-                  )}
+                  {isSelected && <Icon name="Check" size={18} color={colors.accent} />}
                 </TouchableOpacity>
               );
             })}
@@ -114,7 +198,7 @@ export default function BleConfigScreen({ navigation }: Props) {
         )}
 
         {status === 'idle' && foundDevices.length === 0 && (
-          <Text style={styles.hint}>
+          <Text style={styles.emptyHint}>
             Upewnij się że płytka jest włączona i w pobliżu, następnie naciśnij Skanuj.
           </Text>
         )}
@@ -165,7 +249,6 @@ export default function BleConfigScreen({ navigation }: Props) {
           </View>
         )}
 
-        {/* Błąd */}
         {error && (
           <View style={styles.errorBox}>
             <Icon name="AlertTriangle" size={18} color={colors.error} />
@@ -199,12 +282,68 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
-  hint: {
+  fieldLabel: {
+    fontSize: 12,
+    color: colors.dim,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    fontWeight: '600',
+    marginBottom: spacing.sm,
+  },
+
+  // Tryb zamka
+  modeList: { gap: spacing.sm },
+  modeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: spacing.md,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    gap: spacing.md,
+    backgroundColor: colors.bg,
+  },
+  modeRowSelected: {
+    borderColor: colors.accentRing,
+    backgroundColor: colors.accentFill,
+  },
+  modeRadio: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderWidth: 2,
+    borderColor: colors.dim,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modeRadioDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: colors.accent,
+  },
+  modeMeta: { flex: 1 },
+  modeLabel: { fontSize: 14, fontWeight: '600', color: colors.muted },
+  modeLabelSelected: { color: colors.accent },
+  modeSub: { fontSize: 11, color: colors.dim, marginTop: 2 },
+
+  // Zaawansowane toggle
+  advancedToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.sm,
+  },
+  advancedToggleText: {
     fontSize: 13,
     color: colors.dim,
-    textAlign: 'center',
-    marginTop: spacing.md,
-    lineHeight: 20,
+    fontWeight: '600',
+  },
+  hint: {
+    fontSize: 11,
+    color: colors.faint,
+    marginTop: spacing.xs,
   },
 
   // Lista urządzeń
@@ -235,8 +374,15 @@ const styles = StyleSheet.create({
   },
   deviceMeta: { flex: 1 },
   deviceName: { fontSize: 15, fontWeight: '700', color: colors.white },
-  deviceId:   { fontSize: 11, color: colors.dim,  marginTop: 2 },
+  deviceId:   { fontSize: 11, color: colors.dim, marginTop: 2 },
   deviceRssi: { fontSize: 11, color: colors.faint, marginTop: 1 },
+  emptyHint: {
+    fontSize: 13,
+    color: colors.dim,
+    textAlign: 'center',
+    marginTop: spacing.md,
+    lineHeight: 20,
+  },
 
   // Postęp
   progressBox: {

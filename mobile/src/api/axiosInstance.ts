@@ -3,6 +3,7 @@ import { useServerStore } from '../stores/serverStore';
 import { useAuthStore } from '../stores/authStore';
 import { navigationRef } from '../../App';
 
+
 export const axiosInstance = axios.create({
   withCredentials: true,
   headers: {

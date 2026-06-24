@@ -1,5 +1,11 @@
 import { axiosInstance } from "./axiosInstance";
 
+export enum UnlockMode {
+    NfcOnly   = 0,
+    Proximity = 1,
+    LongRange = 2,
+}
+
 export interface groupAccess {
     id: string;
     name: string;
@@ -23,6 +29,8 @@ export interface deviceResponse {
     isPublicInWorkspace?: boolean;
     macAddress: string;
     name?: string;
+    unlockMode: UnlockMode;
+    lastSeen?: string;
     workspaceId?: string;
     groupAccesses?: groupAccess[];
     userAccesses?: userAccess[];
@@ -31,7 +39,8 @@ export interface deviceResponse {
 
 export interface deviceUpdate {
     isPublicInWorkspace: boolean;
-    name: string;
+    unlockMode: UnlockMode;
+    name?: string;
 }
 
 export interface deviceInfoShort {
@@ -39,6 +48,8 @@ export interface deviceInfoShort {
     isPublicInWorkspace: boolean;
     macAddress?: string;
     name?: string;
+    unlockMode?: UnlockMode;
+    lastSeen?: string;
     workspaceId?: string;
 }
 
@@ -46,6 +57,14 @@ export interface deviceInfoMy {
     id: string;
     name?: string;
     isPublicInWorkspace?: boolean;
+    unlockMode?: UnlockMode;
+}
+
+// Pomocnicza — czy płytka była nieaktywna dłużej niż X godzin
+export function isDeviceOffline(lastSeen?: string, thresholdHours = 24): boolean {
+    if (!lastSeen) return true;
+    const diff = Date.now() - new Date(lastSeen).getTime();
+    return diff > thresholdHours * 60 * 60 * 1000;
 }
 
 // Admin + Mod + User
@@ -79,14 +98,14 @@ export async function assignDevice(workspaceId: string, deviceId: string): Promi
 }
 
 // Admin + Mod
-export async function deleteDevice(deviceId: string): Promise<number> {
+export async function removeDevice(deviceId: string): Promise<number> {
     const res = await axiosInstance.post<number>(`/api/device/${deviceId}/remove`)
     return res.status;
 }
 
 // Admin + Mod
 export async function accessGrantDevice(deviceId: string, userId: string): Promise<number> {
-    const res = await axiosInstance.post<number>(`/api/device/${deviceId}/user-access`, { "userId": userId })
+    const res = await axiosInstance.post<number>(`/api/device/${deviceId}/user-access`, { userId })
     return res.status;
 }
 
@@ -98,7 +117,7 @@ export async function accessDenyDevice(deviceId: string, userId: string): Promis
 
 // Admin + Mod
 export async function accessGrantDeviceGroup(deviceId: string, userGroupId: string): Promise<number> {
-    const res = await axiosInstance.post<number>(`/api/device/${deviceId}/group-access`, { userGroupId: userGroupId })
+    const res = await axiosInstance.post<number>(`/api/device/${deviceId}/group-access`, { userGroupId })
     return res.status;
 }
 
@@ -116,6 +135,6 @@ export async function getMyDevices(): Promise<deviceInfoMy[]> {
 
 // Admin + Mod + User
 export async function openDoor(deviceId: string, time: number): Promise<number> {
-    const res = await axiosInstance.post<number>(`/api/device/${deviceId}/activate/${time * 1000}`)
+    const res = await axiosInstance.post<number>(`/api/device/${deviceId}/activate/${time}`)
     return res.status;
 }
